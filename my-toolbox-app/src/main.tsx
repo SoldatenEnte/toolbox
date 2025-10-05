@@ -1,3 +1,4 @@
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
@@ -6,6 +7,7 @@ import './index.css';
 import { Layout } from '@/components/Layout';
 import { HomePage } from '@/pages/HomePage';
 import { tools } from '@/tools';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +22,10 @@ const router = createBrowserRouter([
         path: tool.path,
         element: <tool.component />,
       })),
+      {
+        path: '*',
+        element: <NotFoundPage />,
+      }
     ],
   },
 ]);

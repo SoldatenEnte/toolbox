@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud, Code } from 'lucide-react';
+import { Palette, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/color-picker';
 import { cn } from '@/lib/utils';
 import PixelBlast from '@/components/bits/PixelBlast';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { DownloadButton } from '@/components/ui/download-button';
 
 type Level = 'L' | 'M' | 'Q' | 'H';
 
@@ -43,8 +45,8 @@ interface QrCodePreviewProps {
     options: QrCodeOptions;
     size: number;
     onSizeChange: (size: number) => void;
-    onDownload: (format: 'png' | 'jpeg') => void;
-    onDownloadSVG: () => void;
+    onFormatSelect: (format: 'png' | 'jpeg' | 'svg') => void;
+    isTooLong: boolean;
     className?: string;
 }
 interface QrCodeControlsProps {
@@ -75,11 +77,27 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 };
 
 // --- Sub-Components with Typed Props ---
-const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, onDownloadSVG, className }) => (
+const QrErrorFallback = () => (
+    <div className="flex flex-col items-center justify-center h-full text-center text-destructive p-4 bg-destructive/10 rounded-lg">
+        <AlertTriangle className="w-10 h-10 mb-3" />
+        <p className="font-semibold">Data Too Long</p>
+        <p className="text-sm text-destructive/80">
+            The input data is too long to be encoded in a QR code with the current settings. Try shortening the text or lowering the error correction level.
+        </p>
+    </div>
+);
+
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onFormatSelect, isTooLong, className }) => (
     <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8 h-full", className)}>
         <div className="flex-grow w-full flex items-center justify-center min-h-0">
             <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
-                <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
+                {isTooLong ? (
+                    <QrErrorFallback />
+                ) : (
+                    <ErrorBoundary fallback={<QrErrorFallback />}>
+                        <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
+                    </ErrorBoundary>
+                )}
             </div>
         </div>
         <div className="w-full max-w-xs mt-8 flex-shrink-0">
@@ -87,15 +105,7 @@ const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeCha
             <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
         </div>
         <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
-            <Button onClick={() => onDownload('png')} disabled={!options.value}>
-                <Download className="mr-2 h-4 w-4" /> PNG
-            </Button>
-            <Button variant="secondary" onClick={() => onDownload('jpeg')} disabled={!options.value}>
-                JPG
-            </Button>
-            <Button variant="outline" onClick={onDownloadSVG} disabled={!options.value}>
-                <Code className="mr-2 h-4 w-4" /> SVG
-            </Button>
+            <DownloadButton onDownload={onFormatSelect} disabled={!options.value || isTooLong} />
         </div>
     </Card>
 );
@@ -203,6 +213,14 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
 );
 
 // --- Main Component ---
+// Approximate character limits for alphanumeric data per error correction level.
+const QR_CAPACITY_MAP: Record<Level, number> = {
+    L: 2953, // Low
+    M: 2331, // Medium
+    Q: 1663, // Quartile
+    H: 1273, // High
+};
+
 export const QRCodeGenerator = () => {
     const [text, setText] = useState('http://ave.dee.isep.ipp.pt/~1250182');
     const [size, setSize] = useState(512);
@@ -214,6 +232,8 @@ export const QRCodeGenerator = () => {
     const debouncedText = useDebounce(text, 500);
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
+
+    const isTooLong = debouncedText.length > QR_CAPACITY_MAP[level];
 
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -243,7 +263,7 @@ export const QRCodeGenerator = () => {
         }
     };
 
-    const handleDownload = (format: 'png' | 'jpeg') => {
+    const handleDownloadRaster = (format: 'png' | 'jpeg') => {
         const svgElement = qrRef.current?.querySelector('svg');
         if (svgElement) {
             const svgString = new XMLSerializer().serializeToString(svgElement);
@@ -293,6 +313,14 @@ export const QRCodeGenerator = () => {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+        }
+    };
+
+    const handleFormatSelect = (format: 'png' | 'jpeg' | 'svg') => {
+        if (format === 'svg') {
+            handleDownloadSVG();
+        } else {
+            handleDownloadRaster(format);
         }
     };
 
@@ -355,8 +383,8 @@ export const QRCodeGenerator = () => {
                         options={options}
                         size={size}
                         onSizeChange={setSize}
-                        onDownload={handleDownload}
-                        onDownloadSVG={handleDownloadSVG}
+                        onFormatSelect={handleFormatSelect}
+                        isTooLong={isTooLong}
                     />
                 </div>
             </div>

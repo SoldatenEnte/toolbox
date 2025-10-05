@@ -11,19 +11,26 @@ my-toolbox-app/
 │   │   │   ├── Beams.tsx
 │   │   │   ├── ClickSpark.tsx
 │   │   │   ├── Dock.tsx
+│   │   │   ├── PixelBlast.tsx
 │   │   │   ├── ShinyText.tsx
-│   │   │   └── StaggeredMenu.tsx
+│   │   │   ├── StaggeredMenu.tsx
+│   │   │   └── TargetCursor.tsx
 │   │   ├── ui/
+│   │   │   ├── blurry-button.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── card.tsx
+│   │   │   ├── color-picker.tsx
+│   │   │   ├── dialog.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── label.tsx
+│   │   │   ├── popover.tsx
 │   │   │   ├── select.tsx
 │   │   │   ├── separator.tsx
 │   │   │   ├── sheet.tsx
 │   │   │   ├── slider.tsx
 │   │   │   └── textarea.tsx
-│   │   └── Layout.tsx
+│   │   ├── Layout.tsx
+│   │   └── PixelBlast.tsx
 │   ├── hooks/
 │   ├── lib/
 │   │   └── utils.ts
@@ -254,11 +261,14 @@ export default defineConfig([
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "color": "^5.0.2",
     "gsap": "^3.13.0",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.22",
     "postcss": "^8.5.6",
+    "postprocessing": "^6.37.8",
     "qrcode.react": "^4.2.0",
+    "radix-ui": "^1.4.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3",
@@ -268,6 +278,7 @@ export default defineConfig([
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/color": "^4.2.0",
     "@types/node": "^24.6.2",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
@@ -619,42 +630,83 @@ export const tools: Tool[] = [
 --- END OF FILE src/tools.ts ---
 
 --- START OF FILE src/components/Layout.tsx ---
-import { Outlet } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import { tools } from '@/tools';
 import Beams from './bits/Beams';
-import { StaggeredMenu, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
+import { StaggeredMenu, StaggeredMenuItem, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
 import { ClickSpark } from './bits/ClickSpark';
+import { Home } from 'lucide-react';
+
+export type LayoutContext = {
+    openMenu: () => void;
+};
 
 export const Layout = () => {
-    const menuItems = tools.map(tool => ({
-        label: tool.name,
-        ariaLabel: `Go to ${tool.name}`,
-        link: tool.path,
-    }));
+    const location = useLocation();
+    const isHomePage = location.pathname === '/';
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const mousePosition = useRef({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const handleMouseMove = (event: MouseEvent) => {
+            mousePosition.current = { x: event.clientX, y: event.clientY };
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, []);
+
+    const toggleMenu = () => setIsMenuOpen(prev => !prev);
+    const openMenu = () => setIsMenuOpen(true);
+    const closeMenu = () => setIsMenuOpen(false);
+
+    const menuItems: StaggeredMenuItem[] = [
+        {
+            label: 'Home',
+            ariaLabel: 'Go to Home page',
+            link: '/',
+        },
+        ...tools.map(tool => ({
+            label: tool.name,
+            ariaLabel: `Go to ${tool.name}`,
+            link: tool.path,
+        })),
+    ];
 
     const socialItems: StaggeredMenuSocialItem[] = [
         { label: 'GitHub', link: 'https://github.com' },
         { label: 'Twitter', link: 'https://twitter.com' },
     ];
 
+    const logo = !isHomePage ? (
+        <NavLink to="/" aria-label="Go to homepage" className="text-zinc-50 hover:text-white transition-colors">
+            <Home className="h-7 w-7" />
+        </NavLink>
+    ) : null;
+
     return (
         <div className="h-screen font-sans antialiased relative">
             <ClickSpark>
-                <div className="absolute inset-0 -z-10">
-                    {/* FIX: Applying your requested Beam properties */}
-                    <Beams
-                        beamWidth={3}
-                        beamHeight={30}
-                        beamNumber={20}
-                        speed={2}
-                        noiseIntensity={1.75}
-                        scale={0.2}
-                        rotation={30}
-                    />
-                </div>
+                {isHomePage && (
+                    <div className="absolute inset-0 -z-10">
+                        <Beams
+                            beamWidth={3}
+                            beamHeight={30}
+                            beamNumber={60}
+                            speed={2}
+                            noiseIntensity={1.75}
+                            scale={0.2}
+                            rotation={30}
+                            lightIntensity={0.4}
+                            envMapIntensity={3}
+                        />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,black)] pointer-events-none" />
+                    </div>
+                )}
 
                 <div className="relative z-10 h-full flex flex-col">
-                    {/* FIX: Configuring StaggeredMenu for a dark theme and enabling socials */}
                     <StaggeredMenu
                         items={menuItems}
                         socialItems={socialItems}
@@ -663,10 +715,15 @@ export const Layout = () => {
                         colors={['#18181b', '#27272a']} // zinc-900, zinc-800
                         accentColor="#FAFAFA" // zinc-50
                         openMenuButtonColor="#FAFAFA"
+                        isOpen={isMenuOpen}
+                        onToggle={toggleMenu}
+                        onClose={closeMenu}
+                        initialCursorPos={mousePosition.current}
+                        logo={logo}
                     />
 
                     <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 overflow-y-auto">
-                        <Outlet />
+                        <Outlet context={{ openMenu }} />
                     </main>
                 </div>
             </ClickSpark>
@@ -674,6 +731,673 @@ export const Layout = () => {
     );
 };
 --- END OF FILE src/components/Layout.tsx ---
+
+--- START OF FILE src/components/PixelBlast.tsx ---
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { EffectComposer, EffectPass, RenderPass, Effect } from 'postprocessing';
+
+type PixelBlastVariant = 'square' | 'circle' | 'triangle' | 'diamond';
+
+type PixelBlastProps = {
+  variant?: PixelBlastVariant;
+  pixelSize?: number;
+  color?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  antialias?: boolean;
+  patternScale?: number;
+  patternDensity?: number;
+  liquid?: boolean;
+  liquidStrength?: number;
+  liquidRadius?: number;
+  pixelSizeJitter?: number;
+  enableRipples?: boolean;
+  rippleIntensityScale?: number;
+  rippleThickness?: number;
+  rippleSpeed?: number;
+  liquidWobbleSpeed?: number;
+  autoPauseOffscreen?: boolean;
+  speed?: number;
+  transparent?: boolean;
+  edgeFade?: number;
+  noiseAmount?: number;
+};
+
+const createTouchTexture = () => {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2D context not available');
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const texture = new THREE.Texture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  const trail: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    force: number;
+    age: number;
+  }[] = [];
+  let last: { x: number; y: number } | null = null;
+  const maxAge = 64;
+  let radius = 0.1 * size;
+  const speed = 1 / maxAge;
+  const clear = () => {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+  const drawPoint = (p: { x: number; y: number; vx: number; vy: number; force: number; age: number }) => {
+    const pos = { x: p.x * size, y: (1 - p.y) * size };
+    let intensity = 1;
+    const easeOutSine = (t: number) => Math.sin((t * Math.PI) / 2);
+    const easeOutQuad = (t: number) => -t * (t - 2);
+    if (p.age < maxAge * 0.3) intensity = easeOutSine(p.age / (maxAge * 0.3));
+    else intensity = easeOutQuad(1 - (p.age - maxAge * 0.3) / (maxAge * 0.7)) || 0;
+    intensity *= p.force;
+    const color = `${((p.vx + 1) / 2) * 255}, ${((p.vy + 1) / 2) * 255}, ${intensity * 255}`;
+    const offset = size * 5;
+    ctx.shadowOffsetX = offset;
+    ctx.shadowOffsetY = offset;
+    ctx.shadowBlur = radius;
+    ctx.shadowColor = `rgba(${color},${0.22 * intensity})`;
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,0,0,1)';
+    ctx.arc(pos.x - offset, pos.y - offset, radius, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  const addTouch = (norm: { x: number; y: number }) => {
+    let force = 0;
+    let vx = 0;
+    let vy = 0;
+    if (last) {
+      const dx = norm.x - last.x;
+      const dy = norm.y - last.y;
+      if (dx === 0 && dy === 0) return;
+      const dd = dx * dx + dy * dy;
+      const d = Math.sqrt(dd);
+      vx = dx / (d || 1);
+      vy = dy / (d || 1);
+      force = Math.min(dd * 10000, 1);
+    }
+    last = { x: norm.x, y: norm.y };
+    trail.push({ x: norm.x, y: norm.y, age: 0, force, vx, vy });
+  };
+  const update = () => {
+    clear();
+    for (let i = trail.length - 1; i >= 0; i--) {
+      const point = trail[i];
+      const f = point.force * speed * (1 - point.age / maxAge);
+      point.x += point.vx * f;
+      point.y += point.vy * f;
+      point.age++;
+      if (point.age > maxAge) trail.splice(i, 1);
+    }
+    for (let i = 0; i < trail.length; i++) drawPoint(trail[i]);
+    texture.needsUpdate = true;
+  };
+  return {
+    canvas,
+    texture,
+    addTouch,
+    update,
+    set radiusScale(v: number) {
+      radius = 0.1 * size * v;
+    },
+    get radiusScale() {
+      return radius / (0.1 * size);
+    },
+    size
+  };
+};
+
+const createLiquidEffect = (texture: THREE.Texture, opts?: { strength?: number; freq?: number }) => {
+  const fragment = `
+    uniform sampler2D uTexture;
+    uniform float uStrength;
+    uniform float uTime;
+    uniform float uFreq;
+
+    void mainUv(inout vec2 uv) {
+      vec4 tex = texture2D(uTexture, uv);
+      float vx = tex.r * 2.0 - 1.0;
+      float vy = tex.g * 2.0 - 1.0;
+      float intensity = tex.b;
+
+      float wave = 0.5 + 0.5 * sin(uTime * uFreq + intensity * 6.2831853);
+
+      float amt = uStrength * intensity * wave;
+
+      uv += vec2(vx, vy) * amt;
+    }
+    `;
+  return new Effect('LiquidEffect', fragment, {
+    uniforms: new Map<string, THREE.Uniform>([
+      ['uTexture', new THREE.Uniform(texture)],
+      ['uStrength', new THREE.Uniform(opts?.strength ?? 0.025)],
+      ['uTime', new THREE.Uniform(0)],
+      ['uFreq', new THREE.Uniform(opts?.freq ?? 4.5)]
+    ])
+  });
+};
+
+const SHAPE_MAP: Record<PixelBlastVariant, number> = {
+  square: 0,
+  circle: 1,
+  triangle: 2,
+  diamond: 3
+};
+
+const VERTEX_SRC = `
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+`;
+
+const FRAGMENT_SRC = `
+precision highp float;
+
+uniform vec3  uColor;
+uniform vec2  uResolution;
+uniform float uTime;
+uniform float uPixelSize;
+uniform float uScale;
+uniform float uDensity;
+uniform float uPixelJitter;
+uniform int   uEnableRipples;
+uniform float uRippleSpeed;
+uniform float uRippleThickness;
+uniform float uRippleIntensity;
+uniform float uEdgeFade;
+
+uniform int   uShapeType;
+const int SHAPE_SQUARE   = 0;
+const int SHAPE_CIRCLE   = 1;
+const int SHAPE_TRIANGLE = 2;
+const int SHAPE_DIAMOND  = 3;
+
+const int   MAX_CLICKS = 10;
+
+uniform vec2  uClickPos  [MAX_CLICKS];
+uniform float uClickTimes[MAX_CLICKS];
+
+out vec4 fragColor;
+
+float Bayer2(vec2 a) {
+  a = floor(a);
+  return fract(a.x / 2. + a.y * a.y * .75);
+}
+#define Bayer4(a) (Bayer2(.5*(a))*0.25 + Bayer2(a))
+#define Bayer8(a) (Bayer4(.5*(a))*0.25 + Bayer2(a))
+
+#define FBM_OCTAVES     5
+#define FBM_LACUNARITY  1.25
+#define FBM_GAIN        1.0
+
+float hash11(float n){ return fract(sin(n)*43758.5453); }
+
+float vnoise(vec3 p){
+  vec3 ip = floor(p);
+  vec3 fp = fract(p);
+  float n000 = hash11(dot(ip + vec3(0.0,0.0,0.0), vec3(1.0,57.0,113.0)));
+  float n100 = hash11(dot(ip + vec3(1.0,0.0,0.0), vec3(1.0,57.0,113.0)));
+  float n010 = hash11(dot(ip + vec3(0.0,1.0,0.0), vec3(1.0,57.0,113.0)));
+  float n110 = hash11(dot(ip + vec3(1.0,1.0,0.0), vec3(1.0,57.0,113.0)));
+  float n001 = hash11(dot(ip + vec3(0.0,0.0,1.0), vec3(1.0,57.0,113.0)));
+  float n101 = hash11(dot(ip + vec3(1.0,0.0,1.0), vec3(1.0,57.0,113.0)));
+  float n011 = hash11(dot(ip + vec3(0.0,1.0,1.0), vec3(1.0,57.0,113.0)));
+  float n111 = hash11(dot(ip + vec3(1.0,1.0,1.0), vec3(1.0,57.0,113.0)));
+  vec3 w = fp*fp*fp*(fp*(fp*6.0-15.0)+10.0);
+  float x00 = mix(n000, n100, w.x);
+  float x10 = mix(n010, n110, w.x);
+  float x01 = mix(n001, n101, w.x);
+  float x11 = mix(n011, n111, w.x);
+  float y0  = mix(x00, x10, w.y);
+  float y1  = mix(x01, x11, w.y);
+  return mix(y0, y1, w.z) * 2.0 - 1.0;
+}
+
+float fbm2(vec2 uv, float t){
+  vec3 p = vec3(uv * uScale, t);
+  float amp = 1.0;
+  float freq = 1.0;
+  float sum = 1.0;
+  for (int i = 0; i < FBM_OCTAVES; ++i){
+    sum  += amp * vnoise(p * freq);
+    freq *= FBM_LACUNARITY;
+    amp  *= FBM_GAIN;
+  }
+  return sum * 0.5 + 0.5;
+}
+
+float maskCircle(vec2 p, float cov){
+  float r = sqrt(cov) * .25;
+  float d = length(p - 0.5) - r;
+  float aa = 0.5 * fwidth(d);
+  return cov * (1.0 - smoothstep(-aa, aa, d * 2.0));
+}
+
+float maskTriangle(vec2 p, vec2 id, float cov){
+  bool flip = mod(id.x + id.y, 2.0) > 0.5;
+  if (flip) p.x = 1.0 - p.x;
+  float r = sqrt(cov);
+  float d  = p.y - r*(1.0 - p.x);
+  float aa = fwidth(d);
+  return cov * clamp(0.5 - d/aa, 0.0, 1.0);
+}
+
+float maskDiamond(vec2 p, float cov){
+  float r = sqrt(cov) * 0.564;
+  return step(abs(p.x - 0.49) + abs(p.y - 0.49), r);
+}
+
+void main(){
+  float pixelSize = uPixelSize;
+  vec2 fragCoord = gl_FragCoord.xy - uResolution * .5;
+  float aspectRatio = uResolution.x / uResolution.y;
+
+  vec2 pixelId = floor(fragCoord / pixelSize);
+  vec2 pixelUV = fract(fragCoord / pixelSize);
+
+  float cellPixelSize = 8.0 * pixelSize;
+  vec2 cellId = floor(fragCoord / cellPixelSize);
+  vec2 cellCoord = cellId * cellPixelSize;
+  vec2 uv = cellCoord / uResolution * vec2(aspectRatio, 1.0);
+
+  float base = fbm2(uv, uTime * 0.05);
+  base = base * 0.5 - 0.65;
+
+  float feed = base + (uDensity - 0.5) * 0.3;
+
+  float speed     = uRippleSpeed;
+  float thickness = uRippleThickness;
+  const float dampT     = 1.0;
+  const float dampR     = 10.0;
+
+  if (uEnableRipples == 1) {
+    for (int i = 0; i < MAX_CLICKS; ++i){
+      vec2 pos = uClickPos[i];
+      if (pos.x < 0.0) continue;
+      float cellPixelSize = 8.0 * pixelSize;
+      vec2 cuv = (((pos - uResolution * .5 - cellPixelSize * .5) / (uResolution))) * vec2(aspectRatio, 1.0);
+      float t = max(uTime - uClickTimes[i], 0.0);
+      float r = distance(uv, cuv);
+      float waveR = speed * t;
+      float ring  = exp(-pow((r - waveR) / thickness, 2.0));
+      float atten = exp(-dampT * t) * exp(-dampR * r);
+      feed = max(feed, ring * atten * uRippleIntensity);
+    }
+  }
+
+  float bayer = Bayer8(fragCoord / uPixelSize) - 0.5;
+  float bw = step(0.5, feed + bayer);
+
+  float h = fract(sin(dot(floor(fragCoord / uPixelSize), vec2(127.1, 311.7))) * 43758.5453);
+  float jitterScale = 1.0 + (h - 0.5) * uPixelJitter;
+  float coverage = bw * jitterScale;
+  float M;
+  if      (uShapeType == SHAPE_CIRCLE)   M = maskCircle (pixelUV, coverage);
+  else if (uShapeType == SHAPE_TRIANGLE) M = maskTriangle(pixelUV, pixelId, coverage);
+  else if (uShapeType == SHAPE_DIAMOND)  M = maskDiamond(pixelUV, coverage);
+  else                                   M = coverage;
+
+  if (uEdgeFade > 0.0) {
+    vec2 norm = gl_FragCoord.xy / uResolution;
+    float edge = min(min(norm.x, norm.y), min(1.0 - norm.x, 1.0 - norm.y));
+    float fade = smoothstep(0.0, uEdgeFade, edge);
+    M *= fade;
+  }
+
+  vec3 color = uColor;
+  fragColor = vec4(color, M);
+}
+`;
+
+const MAX_CLICKS = 10;
+
+const PixelBlast: React.FC<PixelBlastProps> = ({
+  variant = 'square',
+  pixelSize = 3,
+  color = '#B19EEF',
+  className,
+  style,
+  antialias = true,
+  patternScale = 2,
+  patternDensity = 1,
+  liquid = false,
+  liquidStrength = 0.1,
+  liquidRadius = 1,
+  pixelSizeJitter = 0,
+  enableRipples = true,
+  rippleIntensityScale = 1,
+  rippleThickness = 0.1,
+  rippleSpeed = 0.3,
+  liquidWobbleSpeed = 4.5,
+  autoPauseOffscreen = true,
+  speed = 0.5,
+  transparent = true,
+  edgeFade = 0.5,
+  noiseAmount = 0
+}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const visibilityRef = useRef({ visible: true });
+  const speedRef = useRef(speed);
+
+  const threeRef = useRef<{
+    renderer: THREE.WebGLRenderer;
+    scene: THREE.Scene;
+    camera: THREE.OrthographicCamera;
+    material: THREE.ShaderMaterial;
+    clock: THREE.Clock;
+    clickIx: number;
+    uniforms: {
+      uResolution: { value: THREE.Vector2 };
+      uTime: { value: number };
+      uColor: { value: THREE.Color };
+      uClickPos: { value: THREE.Vector2[] };
+      uClickTimes: { value: Float32Array };
+      uShapeType: { value: number };
+      uPixelSize: { value: number };
+      uScale: { value: number };
+      uDensity: { value: number };
+      uPixelJitter: { value: number };
+      uEnableRipples: { value: number };
+      uRippleSpeed: { value: number };
+      uRippleThickness: { value: number };
+      uRippleIntensity: { value: number };
+      uEdgeFade: { value: number };
+    };
+    resizeObserver?: ResizeObserver;
+    raf?: number;
+    quad?: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
+    timeOffset?: number;
+    composer?: EffectComposer;
+    touch?: ReturnType<typeof createTouchTexture>;
+    liquidEffect?: Effect;
+  } | null>(null);
+  const prevConfigRef = useRef<any>(null);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    speedRef.current = speed;
+    const needsReinitKeys = ['antialias', 'liquid', 'noiseAmount'];
+    const cfg = { antialias, liquid, noiseAmount };
+    let mustReinit = false;
+    if (!threeRef.current) mustReinit = true;
+    else if (prevConfigRef.current) {
+      for (const k of needsReinitKeys)
+        if (prevConfigRef.current[k] !== (cfg as any)[k]) {
+          mustReinit = true;
+          break;
+        }
+    }
+    if (mustReinit) {
+      if (threeRef.current) {
+        const t = threeRef.current;
+        t.resizeObserver?.disconnect();
+        cancelAnimationFrame(t.raf!);
+        t.quad?.geometry.dispose();
+        t.material.dispose();
+        t.composer?.dispose();
+        t.renderer.dispose();
+        if (t.renderer.domElement.parentElement === container) container.removeChild(t.renderer.domElement);
+        threeRef.current = null;
+      }
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl2', { antialias, alpha: true });
+      if (!gl) return;
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        context: gl as WebGL2RenderingContext,
+        antialias,
+        alpha: true
+      });
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      container.appendChild(renderer.domElement);
+      const uniforms = {
+        uResolution: { value: new THREE.Vector2(0, 0) },
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(color) },
+        uClickPos: {
+          value: Array.from({ length: MAX_CLICKS }, () => new THREE.Vector2(-1, -1))
+        },
+        uClickTimes: { value: new Float32Array(MAX_CLICKS) },
+        uShapeType: { value: SHAPE_MAP[variant] ?? 0 },
+        uPixelSize: { value: pixelSize * renderer.getPixelRatio() },
+        uScale: { value: patternScale },
+        uDensity: { value: patternDensity },
+        uPixelJitter: { value: pixelSizeJitter },
+        uEnableRipples: { value: enableRipples ? 1 : 0 },
+        uRippleSpeed: { value: rippleSpeed },
+        uRippleThickness: { value: rippleThickness },
+        uRippleIntensity: { value: rippleIntensityScale },
+        uEdgeFade: { value: edgeFade }
+      };
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      const material = new THREE.ShaderMaterial({
+        vertexShader: VERTEX_SRC,
+        fragmentShader: FRAGMENT_SRC,
+        uniforms,
+        transparent: true,
+        glslVersion: THREE.GLSL3,
+        depthTest: false,
+        depthWrite: false
+      });
+      const quadGeom = new THREE.PlaneGeometry(2, 2);
+      const quad = new THREE.Mesh(quadGeom, material);
+      scene.add(quad);
+      const clock = new THREE.Clock();
+      const setSize = () => {
+        const w = container.clientWidth || 1;
+        const h = container.clientHeight || 1;
+        renderer.setSize(w, h, false);
+        uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height);
+        if (threeRef.current?.composer)
+          threeRef.current.composer.setSize(renderer.domElement.width, renderer.domElement.height);
+        uniforms.uPixelSize.value = pixelSize * renderer.getPixelRatio();
+      };
+      setSize();
+      const ro = new ResizeObserver(setSize);
+      ro.observe(container);
+      const randomFloat = () => {
+        if (typeof window !== 'undefined' && (window as any).crypto?.getRandomValues) {
+          const u32 = new Uint32Array(1);
+          window.crypto.getRandomValues(u32);
+          return u32[0] / 0xffffffff;
+        }
+        return Math.random();
+      };
+      const timeOffset = randomFloat() * 1000;
+      let composer: EffectComposer | undefined;
+      let touch: ReturnType<typeof createTouchTexture> | undefined;
+      let liquidEffect: Effect | undefined;
+      if (liquid) {
+        touch = createTouchTexture();
+        touch.radiusScale = liquidRadius;
+        composer = new EffectComposer(renderer);
+        const renderPass = new RenderPass(scene, camera);
+        liquidEffect = createLiquidEffect(touch.texture, {
+          strength: liquidStrength,
+          freq: liquidWobbleSpeed
+        });
+        const effectPass = new EffectPass(camera, liquidEffect);
+        effectPass.renderToScreen = true;
+        composer.addPass(renderPass);
+        composer.addPass(effectPass);
+      }
+      if (noiseAmount > 0) {
+        if (!composer) {
+          composer = new EffectComposer(renderer);
+          composer.addPass(new RenderPass(scene, camera));
+        }
+        const noiseEffect = new Effect(
+          'NoiseEffect',
+          `uniform float uTime; uniform float uAmount; float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453);} void mainUv(inout vec2 uv){} void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){ float n=hash(floor(uv*vec2(1920.0,1080.0))+floor(uTime*60.0)); float g=(n-0.5)*uAmount; outputColor=inputColor+vec4(vec3(g),0.0);} `,
+          {
+            uniforms: new Map<string, THREE.Uniform>([
+              ['uTime', new THREE.Uniform(0)],
+              ['uAmount', new THREE.Uniform(noiseAmount)]
+            ])
+          }
+        );
+        const noisePass = new EffectPass(camera, noiseEffect);
+        noisePass.renderToScreen = true;
+        if (composer && composer.passes.length > 0) composer.passes.forEach(p => ((p as any).renderToScreen = false));
+        composer.addPass(noisePass);
+      }
+      if (composer) composer.setSize(renderer.domElement.width, renderer.domElement.height);
+      const mapToPixels = (e: PointerEvent) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const scaleX = renderer.domElement.width / rect.width;
+        const scaleY = renderer.domElement.height / rect.height;
+        const fx = (e.clientX - rect.left) * scaleX;
+        const fy = (rect.height - (e.clientY - rect.top)) * scaleY;
+        return {
+          fx,
+          fy,
+          w: renderer.domElement.width,
+          h: renderer.domElement.height
+        };
+      };
+      const onPointerDown = (e: PointerEvent) => {
+        const { fx, fy } = mapToPixels(e);
+        const ix = threeRef.current?.clickIx ?? 0;
+        uniforms.uClickPos.value[ix].set(fx, fy);
+        uniforms.uClickTimes.value[ix] = uniforms.uTime.value;
+        if (threeRef.current) threeRef.current.clickIx = (ix + 1) % MAX_CLICKS;
+      };
+      const onPointerMove = (e: PointerEvent) => {
+        if (!touch) return;
+        const { fx, fy, w, h } = mapToPixels(e);
+        touch.addTouch({ x: fx / w, y: fy / h });
+      };
+      renderer.domElement.addEventListener('pointerdown', onPointerDown, {
+        passive: true
+      });
+      renderer.domElement.addEventListener('pointermove', onPointerMove, {
+        passive: true
+      });
+      let raf = 0;
+      const animate = () => {
+        if (autoPauseOffscreen && !visibilityRef.current.visible) {
+          raf = requestAnimationFrame(animate);
+          return;
+        }
+        uniforms.uTime.value = timeOffset + clock.getElapsedTime() * speedRef.current;
+        if (liquidEffect) (liquidEffect as any).uniforms.get('uTime').value = uniforms.uTime.value;
+        if (composer) {
+          if (touch) touch.update();
+          composer.passes.forEach(p => {
+            const effs = (p as any).effects;
+            if (effs)
+              effs.forEach((eff: any) => {
+                const u = eff.uniforms?.get('uTime');
+                if (u) u.value = uniforms.uTime.value;
+              });
+          });
+          composer.render();
+        } else renderer.render(scene, camera);
+        raf = requestAnimationFrame(animate);
+      };
+      raf = requestAnimationFrame(animate);
+      threeRef.current = {
+        renderer,
+        scene,
+        camera,
+        material,
+        clock,
+        clickIx: 0,
+        uniforms,
+        resizeObserver: ro,
+        raf,
+        quad,
+        timeOffset,
+        composer,
+        touch,
+        liquidEffect
+      };
+    } else {
+      const t = threeRef.current!;
+      t.uniforms.uShapeType.value = SHAPE_MAP[variant] ?? 0;
+      t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio();
+      t.uniforms.uColor.value.set(color);
+      t.uniforms.uScale.value = patternScale;
+      t.uniforms.uDensity.value = patternDensity;
+      t.uniforms.uPixelJitter.value = pixelSizeJitter;
+      t.uniforms.uEnableRipples.value = enableRipples ? 1 : 0;
+      t.uniforms.uRippleIntensity.value = rippleIntensityScale;
+      t.uniforms.uRippleThickness.value = rippleThickness;
+      t.uniforms.uRippleSpeed.value = rippleSpeed;
+      t.uniforms.uEdgeFade.value = edgeFade;
+      if (transparent) t.renderer.setClearAlpha(0);
+      else t.renderer.setClearColor(0x000000, 1);
+      if (t.liquidEffect) {
+        const uStrength = (t.liquidEffect as any).uniforms.get('uStrength');
+        if (uStrength) uStrength.value = liquidStrength;
+        const uFreq = (t.liquidEffect as any).uniforms.get('uFreq');
+        if (uFreq) uFreq.value = liquidWobbleSpeed;
+      }
+      if (t.touch) t.touch.radiusScale = liquidRadius;
+    }
+    prevConfigRef.current = cfg;
+    return () => {
+      if (threeRef.current && mustReinit) return;
+      if (!threeRef.current) return;
+      const t = threeRef.current;
+      t.resizeObserver?.disconnect();
+      cancelAnimationFrame(t.raf!);
+      t.quad?.geometry.dispose();
+      t.material.dispose();
+      t.composer?.dispose();
+      t.renderer.dispose();
+      if (t.renderer.domElement.parentElement === container) container.removeChild(t.renderer.domElement);
+      threeRef.current = null;
+    };
+  }, [
+    antialias,
+    liquid,
+    noiseAmount,
+    pixelSize,
+    patternScale,
+    patternDensity,
+    enableRipples,
+    rippleIntensityScale,
+    rippleThickness,
+    rippleSpeed,
+    pixelSizeJitter,
+    edgeFade,
+    transparent,
+    liquidStrength,
+    liquidRadius,
+    liquidWobbleSpeed,
+    autoPauseOffscreen,
+    variant,
+    color,
+    speed
+  ]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`w-full h-full relative overflow-hidden ${className ?? ''}`}
+      style={style}
+      aria-label="PixelBlast interactive background"
+    />
+  );
+};
+
+export default PixelBlast;
+
+--- END OF FILE src/components/PixelBlast.tsx ---
 
 --- START OF FILE src/components/bits/Beams.tsx ---
 import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo, FC, ReactNode } from 'react';
@@ -716,8 +1440,6 @@ function extendMaterial<T extends THREE.Material = THREE.Material>(BaseMaterial:
     return mat;
 }
 
-// FIX: Removed all positioning classes (`absolute`, `inset-0`, `-z-10`).
-// This component now passively fills its parent.
 const CanvasWrapper: FC<{ children: ReactNode }> = ({ children }) => (
     <Canvas dpr={[1, 2]} frameloop="always" className="w-full h-full">
         {children}
@@ -782,11 +1504,12 @@ interface BeamsProps {
     beamWidth?: number; beamHeight?: number; beamNumber?: number;
     lightColor?: string; speed?: number; noiseIntensity?: number;
     scale?: number; rotation?: number;
+    lightIntensity?: number; envMapIntensity?: number;
 }
 const Beams: FC<BeamsProps> = ({
     beamWidth = 2, beamHeight = 15, beamNumber = 12,
     lightColor = '#ffffff', speed = 2, noiseIntensity = 1.75,
-    scale = 0.2, rotation = 0
+    scale = 0.2, rotation = 0, lightIntensity = 1, envMapIntensity = 10
 }) => {
     const meshRef = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>>(null!);
     const beamMaterial = useMemo(() =>
@@ -818,16 +1541,16 @@ const Beams: FC<BeamsProps> = ({
             uniforms: {
                 diffuse: new THREE.Color(...hexToNormalizedRGB('#000000')), time: { shared: true, mixed: true, linked: true, value: 0 },
                 roughness: 0.3, metalness: 0.3, uSpeed: { shared: true, mixed: true, linked: true, value: speed },
-                envMapIntensity: 10, uNoiseIntensity: noiseIntensity, uScale: scale
+                envMapIntensity: envMapIntensity, uNoiseIntensity: noiseIntensity, uScale: scale
             }
-        }), [speed, noiseIntensity, scale]
+        }), [speed, noiseIntensity, scale, envMapIntensity]
     );
 
     return (
         <CanvasWrapper>
             <group rotation={[0, 0, degToRad(rotation)]}>
                 <MergedPlanes ref={meshRef} material={beamMaterial} count={beamNumber} width={beamWidth} height={beamHeight} />
-                <DirLight color={lightColor} position={[0, 3, 10]} />
+                <DirLight color={lightColor} position={[0, 3, 10]} intensity={lightIntensity} />
             </group>
             <ambientLight intensity={1} />
             <color attach="background" args={['#000000']} />
@@ -871,7 +1594,7 @@ const MergedPlanes = forwardRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMat
         return <mesh ref={mesh} geometry={geometry} material={material} />;
     });
 MergedPlanes.displayName = 'MergedPlanes';
-const DirLight: FC<{ position: [number, number, number]; color: string }> = ({ position, color }) => {
+const DirLight: FC<{ position: [number, number, number]; color: string; intensity?: number }> = ({ position, color, intensity = 1 }) => {
     const dir = useRef<THREE.DirectionalLight>(null!);
     useEffect(() => {
         if (!dir.current) return;
@@ -879,7 +1602,7 @@ const DirLight: FC<{ position: [number, number, number]; color: string }> = ({ p
         cam.top = 24; cam.bottom = -24; cam.left = -24; cam.right = 24; cam.far = 64;
         dir.current.shadow.bias = -0.004;
     }, []);
-    return <directionalLight ref={dir} color={color} intensity={1} position={position} />;
+    return <directionalLight ref={dir} color={color} intensity={intensity} position={position} />;
 };
 
 export default Beams;
@@ -1054,25 +1777,716 @@ export default function Dock({ items, className = '' }: DockProps) {
 }
 --- END OF FILE src/components/bits/Dock.tsx ---
 
+--- START OF FILE src/components/bits/PixelBlast.tsx ---
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { EffectComposer, EffectPass, RenderPass, Effect } from 'postprocessing';
+
+type PixelBlastVariant = 'square' | 'circle' | 'triangle' | 'diamond';
+
+type PixelBlastProps = {
+    variant?: PixelBlastVariant;
+    pixelSize?: number;
+    color?: string;
+    className?: string;
+    style?: React.CSSProperties;
+    antialias?: boolean;
+    patternScale?: number;
+    patternDensity?: number;
+    liquid?: boolean;
+    liquidStrength?: number;
+    liquidRadius?: number;
+    pixelSizeJitter?: number;
+    enableRipples?: boolean;
+    rippleIntensityScale?: number;
+    rippleThickness?: number;
+    rippleSpeed?: number;
+    liquidWobbleSpeed?: number;
+    autoPauseOffscreen?: boolean;
+    speed?: number;
+    transparent?: boolean;
+    edgeFade?: number;
+    noiseAmount?: number;
+};
+
+const createTouchTexture = () => {
+    const size = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('2D context not available');
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const texture = new THREE.Texture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    const trail: {
+        x: number;
+        y: number;
+        vx: number;
+        vy: number;
+        force: number;
+        age: number;
+    }[] = [];
+    let last: { x: number; y: number } | null = null;
+    const maxAge = 64;
+    let radius = 0.1 * size;
+    const speed = 1 / maxAge;
+    const clear = () => {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+    const drawPoint = (p: { x: number; y: number; vx: number; vy: number; force: number; age: number }) => {
+        const pos = { x: p.x * size, y: (1 - p.y) * size };
+        let intensity = 1;
+        const easeOutSine = (t: number) => Math.sin((t * Math.PI) / 2);
+        const easeOutQuad = (t: number) => -t * (t - 2);
+        if (p.age < maxAge * 0.3) intensity = easeOutSine(p.age / (maxAge * 0.3));
+        else intensity = easeOutQuad(1 - (p.age - maxAge * 0.3) / (maxAge * 0.7)) || 0;
+        intensity *= p.force;
+        const color = `${((p.vx + 1) / 2) * 255}, ${((p.vy + 1) / 2) * 255}, ${intensity * 255}`;
+        const offset = size * 5;
+        ctx.shadowOffsetX = offset;
+        ctx.shadowOffsetY = offset;
+        ctx.shadowBlur = radius;
+        ctx.shadowColor = `rgba(${color},${0.22 * intensity})`;
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255,0,0,1)';
+        ctx.arc(pos.x - offset, pos.y - offset, radius, 0, Math.PI * 2);
+        ctx.fill();
+    };
+    const addTouch = (norm: { x: number; y: number }) => {
+        let force = 0;
+        let vx = 0;
+        let vy = 0;
+        if (last) {
+            const dx = norm.x - last.x;
+            const dy = norm.y - last.y;
+            if (dx === 0 && dy === 0) return;
+            const dd = dx * dx + dy * dy;
+            const d = Math.sqrt(dd);
+            vx = dx / (d || 1);
+            vy = dy / (d || 1);
+            force = Math.min(dd * 10000, 1);
+        }
+        last = { x: norm.x, y: norm.y };
+        trail.push({ x: norm.x, y: norm.y, age: 0, force, vx, vy });
+    };
+    const update = () => {
+        clear();
+        for (let i = trail.length - 1; i >= 0; i--) {
+            const point = trail[i];
+            const f = point.force * speed * (1 - point.age / maxAge);
+            point.x += point.vx * f;
+            point.y += point.vy * f;
+            point.age++;
+            if (point.age > maxAge) trail.splice(i, 1);
+        }
+        for (let i = 0; i < trail.length; i++) drawPoint(trail[i]);
+        texture.needsUpdate = true;
+    };
+    return {
+        canvas,
+        texture,
+        addTouch,
+        update,
+        set radiusScale(v: number) {
+            radius = 0.1 * size * v;
+        },
+        get radiusScale() {
+            return radius / (0.1 * size);
+        },
+        size
+    };
+};
+
+const createLiquidEffect = (texture: THREE.Texture, opts?: { strength?: number; freq?: number }) => {
+    const fragment = `
+    uniform sampler2D uTexture;
+    uniform float uStrength;
+    uniform float uTime;
+    uniform float uFreq;
+
+    void mainUv(inout vec2 uv) {
+      vec4 tex = texture2D(uTexture, uv);
+      float vx = tex.r * 2.0 - 1.0;
+      float vy = tex.g * 2.0 - 1.0;
+      float intensity = tex.b;
+
+      float wave = 0.5 + 0.5 * sin(uTime * uFreq + intensity * 6.2831853);
+
+      float amt = uStrength * intensity * wave;
+
+      uv += vec2(vx, vy) * amt;
+    }
+    `;
+    return new Effect('LiquidEffect', fragment, {
+        uniforms: new Map<string, THREE.Uniform>([
+            ['uTexture', new THREE.Uniform(texture)],
+            ['uStrength', new THREE.Uniform(opts?.strength ?? 0.025)],
+            ['uTime', new THREE.Uniform(0)],
+            ['uFreq', new THREE.Uniform(opts?.freq ?? 4.5)]
+        ])
+    });
+};
+
+const SHAPE_MAP: Record<PixelBlastVariant, number> = {
+    square: 0,
+    circle: 1,
+    triangle: 2,
+    diamond: 3
+};
+
+const VERTEX_SRC = `
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+`;
+
+const FRAGMENT_SRC = `
+precision highp float;
+
+uniform vec3  uColor;
+uniform vec2  uResolution;
+uniform float uTime;
+uniform float uPixelSize;
+uniform float uScale;
+uniform float uDensity;
+uniform float uPixelJitter;
+uniform int   uEnableRipples;
+uniform float uRippleSpeed;
+uniform float uRippleThickness;
+uniform float uRippleIntensity;
+uniform float uEdgeFade;
+
+uniform int   uShapeType;
+const int SHAPE_SQUARE   = 0;
+const int SHAPE_CIRCLE   = 1;
+const int SHAPE_TRIANGLE = 2;
+const int SHAPE_DIAMOND  = 3;
+
+const int   MAX_CLICKS = 10;
+
+uniform vec2  uClickPos  [MAX_CLICKS];
+uniform float uClickTimes[MAX_CLICKS];
+
+out vec4 fragColor;
+
+float Bayer2(vec2 a) {
+  a = floor(a);
+  return fract(a.x / 2. + a.y * a.y * .75);
+}
+#define Bayer4(a) (Bayer2(.5*(a))*0.25 + Bayer2(a))
+#define Bayer8(a) (Bayer4(.5*(a))*0.25 + Bayer2(a))
+
+#define FBM_OCTAVES     5
+#define FBM_LACUNARITY  1.25
+#define FBM_GAIN        1.0
+
+float hash11(float n){ return fract(sin(n)*43758.5453); }
+
+float vnoise(vec3 p){
+  vec3 ip = floor(p);
+  vec3 fp = fract(p);
+  float n000 = hash11(dot(ip + vec3(0.0,0.0,0.0), vec3(1.0,57.0,113.0)));
+  float n100 = hash11(dot(ip + vec3(1.0,0.0,0.0), vec3(1.0,57.0,113.0)));
+  float n010 = hash11(dot(ip + vec3(0.0,1.0,0.0), vec3(1.0,57.0,113.0)));
+  float n110 = hash11(dot(ip + vec3(1.0,1.0,0.0), vec3(1.0,57.0,113.0)));
+  float n001 = hash11(dot(ip + vec3(0.0,0.0,1.0), vec3(1.0,57.0,113.0)));
+  float n101 = hash11(dot(ip + vec3(1.0,0.0,1.0), vec3(1.0,57.0,113.0)));
+  float n011 = hash11(dot(ip + vec3(0.0,1.0,1.0), vec3(1.0,57.0,113.0)));
+  float n111 = hash11(dot(ip + vec3(1.0,1.0,1.0), vec3(1.0,57.0,113.0)));
+  vec3 w = fp*fp*fp*(fp*(fp*6.0-15.0)+10.0);
+  float x00 = mix(n000, n100, w.x);
+  float x10 = mix(n010, n110, w.x);
+  float x01 = mix(n001, n101, w.x);
+  float x11 = mix(n011, n111, w.x);
+  float y0  = mix(x00, x10, w.y);
+  float y1  = mix(x01, x11, w.y);
+  return mix(y0, y1, w.z) * 2.0 - 1.0;
+}
+
+float fbm2(vec2 uv, float t){
+  vec3 p = vec3(uv * uScale, t);
+  float amp = 1.0;
+  float freq = 1.0;
+  float sum = 1.0;
+  for (int i = 0; i < FBM_OCTAVES; ++i){
+    sum  += amp * vnoise(p * freq);
+    freq *= FBM_LACUNARITY;
+    amp  *= FBM_GAIN;
+  }
+  return sum * 0.5 + 0.5;
+}
+
+float maskCircle(vec2 p, float cov){
+  float r = sqrt(cov) * .25;
+  float d = length(p - 0.5) - r;
+  float aa = 0.5 * fwidth(d);
+  return cov * (1.0 - smoothstep(-aa, aa, d * 2.0));
+}
+
+float maskTriangle(vec2 p, vec2 id, float cov){
+  bool flip = mod(id.x + id.y, 2.0) > 0.5;
+  if (flip) p.x = 1.0 - p.x;
+  float r = sqrt(cov);
+  float d  = p.y - r*(1.0 - p.x);
+  float aa = fwidth(d);
+  return cov * clamp(0.5 - d/aa, 0.0, 1.0);
+}
+
+float maskDiamond(vec2 p, float cov){
+  float r = sqrt(cov) * 0.564;
+  return step(abs(p.x - 0.49) + abs(p.y - 0.49), r);
+}
+
+void main(){
+  float pixelSize = uPixelSize;
+  vec2 fragCoord = gl_FragCoord.xy - uResolution * .5;
+  float aspectRatio = uResolution.x / uResolution.y;
+
+  vec2 pixelId = floor(fragCoord / pixelSize);
+  vec2 pixelUV = fract(fragCoord / pixelSize);
+
+  float cellPixelSize = 8.0 * pixelSize;
+  vec2 cellId = floor(fragCoord / cellPixelSize);
+  vec2 cellCoord = cellId * cellPixelSize;
+  vec2 uv = cellCoord / uResolution * vec2(aspectRatio, 1.0);
+
+  float base = fbm2(uv, uTime * 0.05);
+  base = base * 0.5 - 0.65;
+
+  float feed = base + (uDensity - 0.5) * 0.3;
+
+  float speed     = uRippleSpeed;
+  float thickness = uRippleThickness;
+  const float dampT     = 1.0;
+  const float dampR     = 10.0;
+
+  if (uEnableRipples == 1) {
+    for (int i = 0; i < MAX_CLICKS; ++i){
+      vec2 pos = uClickPos[i];
+      if (pos.x < 0.0) continue;
+      float cellPixelSize = 8.0 * pixelSize;
+      vec2 cuv = (((pos - uResolution * .5 - cellPixelSize * .5) / (uResolution))) * vec2(aspectRatio, 1.0);
+      float t = max(uTime - uClickTimes[i], 0.0);
+      float r = distance(uv, cuv);
+      float waveR = speed * t;
+      float ring  = exp(-pow((r - waveR) / thickness, 2.0));
+      float atten = exp(-dampT * t) * exp(-dampR * r);
+      feed = max(feed, ring * atten * uRippleIntensity);
+    }
+  }
+
+  float bayer = Bayer8(fragCoord / uPixelSize) - 0.5;
+  float bw = step(0.5, feed + bayer);
+
+  float h = fract(sin(dot(floor(fragCoord / uPixelSize), vec2(127.1, 311.7))) * 43758.5453);
+  float jitterScale = 1.0 + (h - 0.5) * uPixelJitter;
+  float coverage = bw * jitterScale;
+  float M;
+  if      (uShapeType == SHAPE_CIRCLE)   M = maskCircle (pixelUV, coverage);
+  else if (uShapeType == SHAPE_TRIANGLE) M = maskTriangle(pixelUV, pixelId, coverage);
+  else if (uShapeType == SHAPE_DIAMOND)  M = maskDiamond(pixelUV, coverage);
+  else                                   M = coverage;
+
+  if (uEdgeFade > 0.0) {
+    vec2 norm = gl_FragCoord.xy / uResolution;
+    float edge = min(min(norm.x, norm.y), min(1.0 - norm.x, 1.0 - norm.y));
+    float fade = smoothstep(0.0, uEdgeFade, edge);
+    M *= fade;
+  }
+
+  vec3 color = uColor;
+  fragColor = vec4(color, M);
+}
+`;
+
+const MAX_CLICKS = 10;
+
+type PixelBlastConfig = {
+    antialias: boolean;
+    liquid: boolean;
+    noiseAmount: number;
+};
+
+const PixelBlast: React.FC<PixelBlastProps> = ({
+    variant = 'square',
+    pixelSize = 3,
+    color = '#B19EEF',
+    className,
+    style,
+    antialias = true,
+    patternScale = 2,
+    patternDensity = 1,
+    liquid = false,
+    liquidStrength = 0.1,
+    liquidRadius = 1,
+    pixelSizeJitter = 0,
+    enableRipples = true,
+    rippleIntensityScale = 1,
+    rippleThickness = 0.1,
+    rippleSpeed = 0.3,
+    liquidWobbleSpeed = 4.5,
+    autoPauseOffscreen = true,
+    speed = 0.5,
+    transparent = true,
+    edgeFade = 0.5,
+    noiseAmount = 0
+}) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const visibilityRef = useRef({ visible: true });
+    const speedRef = useRef(speed);
+
+    const threeRef = useRef<{
+        renderer: THREE.WebGLRenderer;
+        scene: THREE.Scene;
+        camera: THREE.OrthographicCamera;
+        material: THREE.ShaderMaterial;
+        clock: THREE.Clock;
+        clickIx: number;
+        uniforms: {
+            uResolution: { value: THREE.Vector2 };
+            uTime: { value: number };
+            uColor: { value: THREE.Color };
+            uClickPos: { value: THREE.Vector2[] };
+            uClickTimes: { value: Float32Array };
+            uShapeType: { value: number };
+            uPixelSize: { value: number };
+            uScale: { value: number };
+            uDensity: { value: number };
+            uPixelJitter: { value: number };
+            uEnableRipples: { value: number };
+            uRippleSpeed: { value: number };
+            uRippleThickness: { value: number };
+            uRippleIntensity: { value: number };
+            uEdgeFade: { value: number };
+        };
+        resizeObserver?: ResizeObserver;
+        raf?: number;
+        quad?: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
+        timeOffset?: number;
+        composer?: EffectComposer;
+        touch?: ReturnType<typeof createTouchTexture>;
+        liquidEffect?: Effect;
+    } | null>(null);
+    const prevConfigRef = useRef<PixelBlastConfig | null>(null);
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        speedRef.current = speed;
+        const needsReinitKeys: (keyof PixelBlastConfig)[] = ['antialias', 'liquid', 'noiseAmount'];
+        const cfg: PixelBlastConfig = { antialias, liquid, noiseAmount };
+        let mustReinit = false;
+        if (!threeRef.current) mustReinit = true;
+        else if (prevConfigRef.current) {
+            for (const k of needsReinitKeys)
+                if (prevConfigRef.current[k] !== cfg[k]) {
+                    mustReinit = true;
+                    break;
+                }
+        }
+        if (mustReinit) {
+            if (threeRef.current) {
+                const t = threeRef.current;
+                t.resizeObserver?.disconnect();
+                cancelAnimationFrame(t.raf!);
+                t.quad?.geometry.dispose();
+                t.material.dispose();
+                t.composer?.dispose();
+                t.renderer.dispose();
+                if (t.renderer.domElement.parentElement === container) container.removeChild(t.renderer.domElement);
+                threeRef.current = null;
+            }
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl2', { antialias, alpha: true });
+            if (!gl) return;
+            const renderer = new THREE.WebGLRenderer({
+                canvas,
+                context: gl as WebGL2RenderingContext,
+                antialias,
+                alpha: true
+            });
+            renderer.domElement.style.width = '100%';
+            renderer.domElement.style.height = '100%';
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            container.appendChild(renderer.domElement);
+            const uniforms = {
+                uResolution: { value: new THREE.Vector2(0, 0) },
+                uTime: { value: 0 },
+                uColor: { value: new THREE.Color(color) },
+                uClickPos: {
+                    value: Array.from({ length: MAX_CLICKS }, () => new THREE.Vector2(-1, -1))
+                },
+                uClickTimes: { value: new Float32Array(MAX_CLICKS) },
+                uShapeType: { value: SHAPE_MAP[variant] ?? 0 },
+                uPixelSize: { value: pixelSize * renderer.getPixelRatio() },
+                uScale: { value: patternScale },
+                uDensity: { value: patternDensity },
+                uPixelJitter: { value: pixelSizeJitter },
+                uEnableRipples: { value: enableRipples ? 1 : 0 },
+                uRippleSpeed: { value: rippleSpeed },
+                uRippleThickness: { value: rippleThickness },
+                uRippleIntensity: { value: rippleIntensityScale },
+                uEdgeFade: { value: edgeFade }
+            };
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            const material = new THREE.ShaderMaterial({
+                vertexShader: VERTEX_SRC,
+                fragmentShader: FRAGMENT_SRC,
+                uniforms,
+                transparent: true,
+                glslVersion: THREE.GLSL3,
+                depthTest: false,
+                depthWrite: false
+            });
+            const quadGeom = new THREE.PlaneGeometry(2, 2);
+            const quad = new THREE.Mesh(quadGeom, material);
+            scene.add(quad);
+            const clock = new THREE.Clock();
+            const setSize = () => {
+                const w = container.clientWidth || 1;
+                const h = container.clientHeight || 1;
+                renderer.setSize(w, h, false);
+                uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height);
+                if (threeRef.current?.composer)
+                    threeRef.current.composer.setSize(renderer.domElement.width, renderer.domElement.height);
+                uniforms.uPixelSize.value = pixelSize * renderer.getPixelRatio();
+            };
+            setSize();
+            const ro = new ResizeObserver(setSize);
+            ro.observe(container);
+            const randomFloat = () => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if (typeof window !== 'undefined' && (window as any).crypto?.getRandomValues) {
+                    const u32 = new Uint32Array(1);
+                    window.crypto.getRandomValues(u32);
+                    return u32[0] / 0xffffffff;
+                }
+                return Math.random();
+            };
+            const timeOffset = randomFloat() * 1000;
+            let composer: EffectComposer | undefined;
+            let touch: ReturnType<typeof createTouchTexture> | undefined;
+            let liquidEffect: Effect | undefined;
+            if (liquid) {
+                touch = createTouchTexture();
+                touch.radiusScale = liquidRadius;
+                composer = new EffectComposer(renderer);
+                const renderPass = new RenderPass(scene, camera);
+                liquidEffect = createLiquidEffect(touch.texture, {
+                    strength: liquidStrength,
+                    freq: liquidWobbleSpeed
+                });
+                const effectPass = new EffectPass(camera, liquidEffect);
+                effectPass.renderToScreen = true;
+                composer.addPass(renderPass);
+                composer.addPass(effectPass);
+            }
+            if (noiseAmount > 0) {
+                if (!composer) {
+                    composer = new EffectComposer(renderer);
+                    composer.addPass(new RenderPass(scene, camera));
+                }
+                const noiseEffect = new Effect(
+                    'NoiseEffect',
+                    `uniform float uTime; uniform float uAmount; float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453);} void mainUv(inout vec2 uv){} void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){ float n=hash(floor(uv*vec2(1920.0,1080.0))+floor(uTime*60.0)); float g=(n-0.5)*uAmount; outputColor=inputColor+vec4(vec3(g),0.0);} `,
+                    {
+                        uniforms: new Map<string, THREE.Uniform>([
+                            ['uTime', new THREE.Uniform(0)],
+                            ['uAmount', new THREE.Uniform(noiseAmount)]
+                        ])
+                    }
+                );
+                const noisePass = new EffectPass(camera, noiseEffect);
+                noisePass.renderToScreen = true;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if (composer && composer.passes.length > 0) composer.passes.forEach(p => ((p as any).renderToScreen = false));
+                composer.addPass(noisePass);
+            }
+            if (composer) composer.setSize(renderer.domElement.width, renderer.domElement.height);
+            const mapToPixels = (e: PointerEvent) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                const scaleX = renderer.domElement.width / rect.width;
+                const scaleY = renderer.domElement.height / rect.height;
+                const fx = (e.clientX - rect.left) * scaleX;
+                const fy = (rect.height - (e.clientY - rect.top)) * scaleY;
+                return {
+                    fx,
+                    fy,
+                    w: renderer.domElement.width,
+                    h: renderer.domElement.height
+                };
+            };
+            const onPointerDown = (e: PointerEvent) => {
+                const { fx, fy } = mapToPixels(e);
+                const ix = threeRef.current?.clickIx ?? 0;
+                uniforms.uClickPos.value[ix].set(fx, fy);
+                uniforms.uClickTimes.value[ix] = uniforms.uTime.value;
+                if (threeRef.current) threeRef.current.clickIx = (ix + 1) % MAX_CLICKS;
+            };
+            const onPointerMove = (e: PointerEvent) => {
+                if (!touch) return;
+                const { fx, fy, w, h } = mapToPixels(e);
+                touch.addTouch({ x: fx / w, y: fy / h });
+            };
+            renderer.domElement.addEventListener('pointerdown', onPointerDown, {
+                passive: true
+            });
+            renderer.domElement.addEventListener('pointermove', onPointerMove, {
+                passive: true
+            });
+            let raf = 0;
+            const animate = () => {
+                if (autoPauseOffscreen && !visibilityRef.current.visible) {
+                    raf = requestAnimationFrame(animate);
+                    return;
+                }
+                uniforms.uTime.value = timeOffset + clock.getElapsedTime() * speedRef.current;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if (liquidEffect) (liquidEffect as any).uniforms.get('uTime').value = uniforms.uTime.value;
+                if (composer) {
+                    if (touch) touch.update();
+                    composer.passes.forEach(p => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const effs = (p as any).effects;
+                        if (effs)
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            effs.forEach((eff: any) => {
+                                const u = eff.uniforms?.get('uTime');
+                                if (u) u.value = uniforms.uTime.value;
+                            });
+                    });
+                    composer.render();
+                } else renderer.render(scene, camera);
+                raf = requestAnimationFrame(animate);
+            };
+            raf = requestAnimationFrame(animate);
+            threeRef.current = {
+                renderer,
+                scene,
+                camera,
+                material,
+                clock,
+                clickIx: 0,
+                uniforms,
+                resizeObserver: ro,
+                raf,
+                quad,
+                timeOffset,
+                composer,
+                touch,
+                liquidEffect
+            };
+        } else {
+            const t = threeRef.current!;
+            t.uniforms.uShapeType.value = SHAPE_MAP[variant] ?? 0;
+            t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio();
+            t.uniforms.uColor.value.set(color);
+            t.uniforms.uScale.value = patternScale;
+            t.uniforms.uDensity.value = patternDensity;
+            t.uniforms.uPixelJitter.value = pixelSizeJitter;
+            t.uniforms.uEnableRipples.value = enableRipples ? 1 : 0;
+            t.uniforms.uRippleIntensity.value = rippleIntensityScale;
+            t.uniforms.uRippleThickness.value = rippleThickness;
+            t.uniforms.uRippleSpeed.value = rippleSpeed;
+            t.uniforms.uEdgeFade.value = edgeFade;
+            if (transparent) t.renderer.setClearAlpha(0);
+            else t.renderer.setClearColor(0x000000, 1);
+            if (t.liquidEffect) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const uStrength = (t.liquidEffect as any).uniforms.get('uStrength');
+                if (uStrength) uStrength.value = liquidStrength;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const uFreq = (t.liquidEffect as any).uniforms.get('uFreq');
+                if (uFreq) uFreq.value = liquidWobbleSpeed;
+            }
+            if (t.touch) t.touch.radiusScale = liquidRadius;
+        }
+        prevConfigRef.current = cfg;
+        return () => {
+            if (threeRef.current && mustReinit) return;
+            if (!threeRef.current) return;
+            const t = threeRef.current;
+            t.resizeObserver?.disconnect();
+            cancelAnimationFrame(t.raf!);
+            t.quad?.geometry.dispose();
+            t.material.dispose();
+            t.composer?.dispose();
+            t.renderer.dispose();
+            if (t.renderer.domElement.parentElement === container) container.removeChild(t.renderer.domElement);
+            threeRef.current = null;
+        };
+    }, [
+        antialias,
+        liquid,
+        noiseAmount,
+        pixelSize,
+        patternScale,
+        patternDensity,
+        enableRipples,
+        rippleIntensityScale,
+        rippleThickness,
+        rippleSpeed,
+        pixelSizeJitter,
+        edgeFade,
+        transparent,
+        liquidStrength,
+        liquidRadius,
+        liquidWobbleSpeed,
+        autoPauseOffscreen,
+        variant,
+        color,
+        speed
+    ]);
+
+    return (
+        <div
+            ref={containerRef}
+            className={`w-full h-full relative overflow-hidden ${className ?? ''}`}
+            style={style}
+            aria-label="PixelBlast interactive background"
+        />
+    );
+};
+
+export default PixelBlast;
+--- END OF FILE src/components/bits/PixelBlast.tsx ---
+
 --- START OF FILE src/components/bits/ShinyText.tsx ---
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface ShinyTextProps {
     text: string;
+    disabled?: boolean;
+    speed?: number;
     className?: string;
 }
 
-const ShinyText: React.FC<ShinyTextProps> = ({ text, className = '' }) => {
+const ShinyText: React.FC<ShinyTextProps> = ({ text, disabled = false, speed = 5, className = '' }) => {
+    const animationDuration = `${speed}s`;
+
     return (
-        <p className={`text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text animate-shine ${className}`}
+        <div
+            className={cn(
+                'bg-clip-text text-transparent',
+                !disabled && 'animate-shine',
+                className
+            )}
             style={{
-                backgroundImage: 'linear-gradient(120deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 1) 40%, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 80%)',
+                backgroundImage:
+                    'linear-gradient(120deg, white 10%, var(--color-muted-foreground) 50%, white 70%)',
                 backgroundSize: '200% 100%',
                 WebkitBackgroundClip: 'text',
+                animationDuration,
             }}
         >
             {text}
-        </p>
+        </div>
     );
 };
 
@@ -1080,9 +2494,10 @@ export default ShinyText;
 --- END OF FILE src/components/bits/ShinyText.tsx ---
 
 --- START OF FILE src/components/bits/StaggeredMenu.tsx ---
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { gsap } from 'gsap';
+import TargetCursor from './TargetCursor';
 
 export interface StaggeredMenuItem {
     label: string;
@@ -1101,7 +2516,7 @@ export interface StaggeredMenuProps {
     displaySocials?: boolean;
     displayItemNumbering?: boolean;
     className?: string;
-    logoUrl?: string;
+    logo?: React.ReactNode;
     menuButtonColor?: string;
     openMenuButtonColor?: string;
     accentColor?: string;
@@ -1109,6 +2524,10 @@ export interface StaggeredMenuProps {
     changeMenuColorOnOpen?: boolean;
     onMenuOpen?: () => void;
     onMenuClose?: () => void;
+    isOpen: boolean;
+    onToggle: () => void;
+    onClose: () => void;
+    initialCursorPos?: { x: number; y: number };
 }
 
 export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
@@ -1119,17 +2538,19 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     displaySocials = true,
     displayItemNumbering = true,
     className,
-    logoUrl,
+    logo,
     menuButtonColor = '#fff',
     openMenuButtonColor = '#fff',
     changeMenuColorOnOpen = true,
     accentColor = '#FAFAFA',
     isFixed = false,
     onMenuOpen,
-    onMenuClose
+    onMenuClose,
+    isOpen,
+    onToggle,
+    onClose,
+    initialCursorPos
 }: StaggeredMenuProps) => {
-    const [open, setOpen] = useState(false);
-    const openRef = useRef(false);
     const panelRef = useRef<HTMLDivElement | null>(null);
     const preLayersRef = useRef<HTMLDivElement | null>(null);
     const preLayerElsRef = useRef<HTMLElement[]>([]);
@@ -1146,6 +2567,39 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
     const busyRef = useRef(false);
     const itemEntranceTweenRef = useRef<gsap.core.Tween | null>(null);
+    const isMounted = useRef(false);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
+        const handleMediaQueryChange = (e: MediaQueryListEvent) => {
+            setIsDesktop(e.matches);
+        };
+        setIsDesktop(mediaQuery.matches);
+        mediaQuery.addEventListener('change', handleMediaQueryChange);
+        return () => {
+            mediaQuery.removeEventListener('change', handleMediaQueryChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                panelRef.current && !panelRef.current.contains(event.target as Node) &&
+                toggleBtnRef.current && !toggleBtnRef.current.contains(event.target as Node)
+            ) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen, onClose]);
+
 
     useLayoutEffect(() => {
         const ctx = gsap.context(() => {
@@ -1255,11 +2709,11 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     React.useEffect(() => {
         if (toggleBtnRef.current) {
             if (changeMenuColorOnOpen) {
-                const targetColor = openRef.current ? openMenuButtonColor : menuButtonColor;
+                const targetColor = isOpen ? openMenuButtonColor : menuButtonColor;
                 gsap.set(toggleBtnRef.current, { color: targetColor });
             } else { gsap.set(toggleBtnRef.current, { color: menuButtonColor }); }
         }
-    }, [changeMenuColorOnOpen, menuButtonColor, openMenuButtonColor]);
+    }, [changeMenuColorOnOpen, menuButtonColor, openMenuButtonColor, isOpen]);
 
     const animateText = useCallback((opening: boolean) => {
         const inner = textInnerRef.current; if (!inner) return;
@@ -1269,14 +2723,26 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
         textCycleAnimRef.current = gsap.to(inner, { yPercent: targetLabel === 'Close' ? -50 : 0, duration: 0.5, ease: 'power4.out' });
     }, []);
 
-    const toggleMenu = useCallback(() => {
-        const target = !openRef.current; openRef.current = target; setOpen(target);
-        if (target) { onMenuOpen?.(); playOpen(); } else { onMenuClose?.(); playClose(); }
-        animateIcon(target); animateColor(target); animateText(target);
-    }, [playOpen, playClose, animateIcon, animateColor, animateText, onMenuOpen, onMenuClose]);
+    useEffect(() => {
+        if (!isMounted.current) {
+            isMounted.current = true;
+            if (!isOpen) return;
+        }
 
-    // FIX: Allow pointer events only when the menu is open
-    const wrapperStyle: React.CSSProperties = { pointerEvents: open ? 'auto' : 'none' };
+        if (isOpen) {
+            onMenuOpen?.();
+            playOpen();
+        } else {
+            onMenuClose?.();
+            playClose();
+        }
+        animateIcon(isOpen);
+        animateColor(isOpen);
+        animateText(isOpen);
+    }, [isOpen, onMenuOpen, onMenuClose, playOpen, playClose, animateIcon, animateColor, animateText]);
+
+
+    const wrapperStyle: React.CSSProperties = { pointerEvents: isOpen ? 'auto' : 'none' };
     if (isFixed) {
         Object.assign(wrapperStyle, { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' });
     } else {
@@ -1285,10 +2751,10 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
     return (
         <div className="sm-scope z-50" style={wrapperStyle}>
-            <div className={(className ? className + ' ' : '') + 'staggered-menu-wrapper relative w-full h-full z-40'} style={accentColor ? ({ ['--sm-accent']: accentColor } as React.CSSProperties) : undefined} data-position={position} data-open={open || undefined}>
+            {isDesktop && isOpen && <TargetCursor targetSelector=".sm-panel-item, .sm-socials-link, .sm-toggle" initialPos={initialCursorPos} />}
+            <div className={(className ? className + ' ' : '') + 'staggered-menu-wrapper relative w-full h-full z-40'} style={accentColor ? ({ ['--sm-accent']: accentColor } as React.CSSProperties) : undefined} data-position={position} data-open={isOpen || undefined}>
                 <div ref={preLayersRef} className="sm-prelayers absolute top-0 right-0 bottom-0 pointer-events-none z-[5]" aria-hidden="true">
                     {(() => {
-                        // FIX: Ensure accentColor is part of the layers for the staggered effect
                         const baseColors = colors && colors.length ? colors.slice(0, 3) : ['#1e1e22', '#35353c'];
                         const allColors = accentColor ? [accentColor, ...baseColors] : baseColors;
                         return allColors.map((c, i) => (<div key={i} className="sm-prelayer absolute top-0 right-0 h-full w-full translate-x-0" style={{ background: c }} />));
@@ -1296,9 +2762,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                 </div>
                 <header className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
-                        {logoUrl && <img src={logoUrl} alt="Logo" className="sm-logo-img block h-8 w-auto object-contain" draggable={false} width={110} height={24} />}
+                        {logo}
                     </div>
-                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 cursor-pointer font-medium leading-none overflow-visible pointer-events-auto" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} aria-controls="staggered-menu-panel" onClick={toggleMenu} type="button">
+                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
                         <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em]" aria-hidden="true">
                             <span ref={textInnerRef} className="sm-toggle-textInner flex flex-col leading-none">
                                 {textLines.map((l, i) => (<span className="sm-toggle-line block h-[1em] leading-none" key={i}>{l}</span>))}
@@ -1310,13 +2776,13 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                         </span>
                     </button>
                 </header>
-                <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel absolute top-0 right-0 h-full bg-zinc-950/95 flex flex-col p-[6em_2em_2em_2em] overflow-y-auto z-10 backdrop-blur-xl" aria-hidden={!open}>
+                <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel absolute top-0 right-0 h-full bg-zinc-950/95 flex flex-col p-[6em_2em_2em_2em] overflow-y-auto z-10 backdrop-blur-xl" aria-hidden={!isOpen}>
                     <div className="sm-panel-inner flex-1 flex flex-col gap-5">
                         <ul className="sm-panel-list list-none m-0 p-0 flex flex-col gap-2" role="list" data-numbering={displayItemNumbering || undefined}>
                             {items && items.length > 0 ? (
                                 items.map((it, idx) => (
                                     <li className="sm-panel-itemWrap relative overflow-hidden leading-none" key={it.label + idx}>
-                                        <NavLink className="sm-panel-item" to={it.link} aria-label={it.ariaLabel} data-index={idx + 1} onClick={toggleMenu}>
+                                        <NavLink className="sm-panel-item" to={it.link} aria-label={it.ariaLabel} data-index={idx + 1} onClick={onClose}>
                                             <span className="sm-panel-itemLabel inline-block [transform-origin:50%_100%] will-change-transform">{it.label}</span>
                                         </NavLink>
                                     </li>
@@ -1334,12 +2800,453 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                     </div>
                 </aside>
             </div>
-            <style>{`.sm-scope .sm-panel-item { position: relative; color: #a1a1aa; font-weight: 600; font-size: 4rem; cursor: pointer; line-height: 1; letter-spacing: -2px; text-transform: uppercase; transition: background 0.25s, color 0.25s; display: inline-block; text-decoration: none; padding-right: 1.4em; } .sm-scope .sm-panel-item:hover { color: var(--sm-accent, #FAFAFA); } .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; } .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.1em; right: 0; font-size: 18px; font-weight: 400; color: var(--sm-accent, #FAFAFA); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); } @media (max-width: 640px) { .sm-scope .sm-panel-item {font-size: 3rem;} } .sm-socials-title { margin: 0; font-size: 1rem; font-weight: 500; color: var(--sm-accent, #FAFAFA); } .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #a1a1aa; text-decoration: none; position: relative; padding: 2px 0; display: inline-block; transition: color 0.3s ease, opacity 0.3s ease; }`}</style>
+            <style>{`.sm-scope .sm-panel-item { position: relative; color: #a1a1aa; font-weight: 600; font-size: 4rem; line-height: 1; letter-spacing: -2px; text-transform: uppercase; transition: background 0.25s, color 0.25s; display: inline-block; text-decoration: none; padding-right: 1.4em; } .sm-scope .sm-panel-item:hover { color: var(--sm-accent, #FAFAFA); } .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; } .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.1em; right: 0; font-size: 18px; font-weight: 400; color: var(--sm-accent, #FAFAFA); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); } @media (max-width: 640px) { .sm-scope .sm-panel-item {font-size: 3rem;} } .sm-socials-title { margin: 0; font-size: 1rem; font-weight: 500; color: var(--sm-accent, #FAFAFA); } .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #a1a1aa; text-decoration: none; position: relative; padding: 2px 0; display: inline-block; transition: color 0.3s ease, opacity 0.3s ease; }`}</style>
         </div>
     );
 };
 export default StaggeredMenu;
 --- END OF FILE src/components/bits/StaggeredMenu.tsx ---
+
+--- START OF FILE src/components/bits/TargetCursor.tsx ---
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
+import { gsap } from 'gsap';
+
+export interface TargetCursorProps {
+    targetSelector?: string;
+    spinDuration?: number;
+    hideDefaultCursor?: boolean;
+    initialPos?: { x: number; y: number };
+}
+
+const TargetCursor: React.FC<TargetCursorProps> = ({
+    targetSelector = '.cursor-target',
+    spinDuration = 2,
+    hideDefaultCursor = true,
+    initialPos,
+}) => {
+    const cursorRef = useRef<HTMLDivElement>(null);
+    const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
+    const spinTl = useRef<gsap.core.Timeline | null>(null);
+    const dotRef = useRef<HTMLDivElement>(null);
+    const constants = useMemo(
+        () => ({
+            borderWidth: 3,
+            cornerSize: 12,
+            parallaxStrength: 0.00005
+        }),
+        []
+    );
+
+    const moveCursor = useCallback((x: number, y: number) => {
+        if (!cursorRef.current) return;
+        gsap.to(cursorRef.current, {
+            x,
+            y,
+            duration: 0.1,
+            ease: 'power3.out'
+        });
+    }, []);
+
+    useEffect(() => {
+        if (hideDefaultCursor) {
+            const style = document.createElement('style');
+            style.id = 'target-cursor-style';
+            style.innerHTML = `* { cursor: none !important; }`;
+            document.head.appendChild(style);
+
+            return () => {
+                const styleElement = document.getElementById('target-cursor-style');
+                if (styleElement) {
+                    document.head.removeChild(styleElement);
+                }
+            };
+        }
+    }, [hideDefaultCursor]);
+
+    useEffect(() => {
+        if (!cursorRef.current) return;
+
+        const cursor = cursorRef.current;
+        cornersRef.current = cursor.querySelectorAll<HTMLDivElement>('.target-cursor-corner');
+
+        let activeTarget: Element | null = null;
+        let currentTargetMove: ((ev: Event) => void) | null = null;
+        let currentLeaveHandler: (() => void) | null = null;
+        let isAnimatingToTarget = false;
+        let resumeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+        const cleanupTarget = (target: Element) => {
+            if (currentTargetMove) {
+                target.removeEventListener('mousemove', currentTargetMove);
+            }
+            if (currentLeaveHandler) {
+                target.removeEventListener('mouseleave', currentLeaveHandler);
+            }
+            currentTargetMove = null;
+            currentLeaveHandler = null;
+        };
+
+        gsap.set(cursor, {
+            xPercent: -50,
+            yPercent: -50,
+            x: initialPos ? initialPos.x : window.innerWidth / 2,
+            y: initialPos ? initialPos.y : window.innerHeight / 2,
+        });
+
+        const createSpinTimeline = () => {
+            if (spinTl.current) {
+                spinTl.current.kill();
+            }
+            spinTl.current = gsap
+                .timeline({ repeat: -1 })
+                .to(cursor, { rotation: '+=360', duration: spinDuration, ease: 'none' });
+        };
+
+        createSpinTimeline();
+
+        const moveHandler = (e: MouseEvent) => moveCursor(e.clientX, e.clientY);
+        window.addEventListener('mousemove', moveHandler);
+
+        const scrollHandler = () => {
+            if (!activeTarget || !cursorRef.current) return;
+
+            const mouseX = gsap.getProperty(cursorRef.current, 'x') as number;
+            const mouseY = gsap.getProperty(cursorRef.current, 'y') as number;
+
+            const elementUnderMouse = document.elementFromPoint(mouseX, mouseY);
+            const isStillOverTarget =
+                elementUnderMouse &&
+                (elementUnderMouse === activeTarget || elementUnderMouse.closest(targetSelector) === activeTarget);
+
+            if (!isStillOverTarget) {
+                if (currentLeaveHandler) {
+                    currentLeaveHandler();
+                }
+            }
+        };
+
+        window.addEventListener('scroll', scrollHandler, { passive: true });
+
+        const mouseDownHandler = (): void => {
+            if (!dotRef.current) return;
+            gsap.to(dotRef.current, { scale: 0.7, duration: 0.3 });
+            gsap.to(cursorRef.current, { scale: 0.9, duration: 0.2 });
+        };
+
+        const mouseUpHandler = (): void => {
+            if (!dotRef.current) return;
+            gsap.to(dotRef.current, { scale: 1, duration: 0.3 });
+            gsap.to(cursorRef.current, { scale: 1, duration: 0.2 });
+        };
+
+        window.addEventListener('mousedown', mouseDownHandler);
+        window.addEventListener('mouseup', mouseUpHandler);
+
+        const enterHandler = (e: MouseEvent) => {
+            const directTarget = e.target as Element;
+
+            const allTargets: Element[] = [];
+            let current = directTarget;
+            while (current && current !== document.body) {
+                if (current.matches(targetSelector)) {
+                    allTargets.push(current);
+                }
+                current = current.parentElement!;
+            }
+
+            const target = allTargets[0] || null;
+            if (!target || !cursorRef.current || !cornersRef.current) return;
+
+            if (activeTarget === target) return;
+
+            if (activeTarget) {
+                cleanupTarget(activeTarget);
+            }
+
+            if (resumeTimeout) {
+                clearTimeout(resumeTimeout);
+                resumeTimeout = null;
+            }
+
+            activeTarget = target;
+            if (cornersRef.current) {
+                const corners = Array.from(cornersRef.current);
+                corners.forEach(corner => {
+                    gsap.killTweensOf(corner);
+                });
+            }
+            gsap.killTweensOf(cursorRef.current, 'rotation');
+            spinTl.current?.pause();
+
+            gsap.set(cursorRef.current, { rotation: 0 });
+
+            const updateCorners = (mouseX?: number, mouseY?: number) => {
+                if (!cursorRef.current || !cornersRef.current) return;
+                const rect = target.getBoundingClientRect();
+                const cursorRect = cursorRef.current.getBoundingClientRect();
+
+                const cursorCenterX = cursorRect.left + cursorRect.width / 2;
+                const cursorCenterY = cursorRect.top + cursorRect.height / 2;
+
+                const [tlc, trc, brc, blc] = Array.from(cornersRef.current);
+
+                const { borderWidth, cornerSize, parallaxStrength } = constants;
+
+                const tlOffset = {
+                    x: rect.left - cursorCenterX - borderWidth,
+                    y: rect.top - cursorCenterY - borderWidth
+                };
+                const trOffset = {
+                    x: rect.right - cursorCenterX + borderWidth - cornerSize,
+                    y: rect.top - cursorCenterY - borderWidth
+                };
+                const brOffset = {
+                    x: rect.right - cursorCenterX + borderWidth - cornerSize,
+                    y: rect.bottom - cursorCenterY + borderWidth - cornerSize
+                };
+                const blOffset = {
+                    x: rect.left - cursorCenterX - borderWidth,
+                    y: rect.bottom - cursorCenterY + borderWidth - cornerSize
+                };
+
+                if (mouseX !== undefined && mouseY !== undefined) {
+                    const targetCenterX = rect.left + rect.width / 2;
+                    const targetCenterY = rect.top + rect.height / 2;
+                    const mouseOffsetX = (mouseX - targetCenterX) * parallaxStrength;
+                    const mouseOffsetY = (mouseY - targetCenterY) * parallaxStrength;
+
+                    tlOffset.x += mouseOffsetX;
+                    tlOffset.y += mouseOffsetY;
+                    trOffset.x += mouseOffsetX;
+                    trOffset.y += mouseOffsetY;
+                    brOffset.x += mouseOffsetX;
+                    brOffset.y += mouseOffsetY;
+                    blOffset.x += mouseOffsetX;
+                    blOffset.y += mouseOffsetY;
+                }
+
+                const tl = gsap.timeline();
+                const corners = [tlc, trc, brc, blc];
+                const offsets = [tlOffset, trOffset, brOffset, blOffset];
+
+                corners.forEach((corner, index) => {
+                    tl.to(
+                        corner,
+                        {
+                            x: offsets[index].x,
+                            y: offsets[index].y,
+                            duration: 0.2,
+                            ease: 'power2.out'
+                        },
+                        0
+                    );
+                });
+            };
+
+            isAnimatingToTarget = true;
+            updateCorners();
+
+            setTimeout(() => {
+                isAnimatingToTarget = false;
+            }, 1);
+
+            let moveThrottle: number | null = null;
+            const targetMove = (ev: Event) => {
+                if (moveThrottle || isAnimatingToTarget) return;
+                moveThrottle = requestAnimationFrame(() => {
+                    const mouseEvent = ev as MouseEvent;
+                    updateCorners(mouseEvent.clientX, mouseEvent.clientY);
+                    moveThrottle = null;
+                });
+            };
+
+            const leaveHandler = () => {
+                activeTarget = null;
+                isAnimatingToTarget = false;
+
+                if (cornersRef.current) {
+                    const corners = Array.from(cornersRef.current);
+                    gsap.killTweensOf(corners);
+
+                    const { cornerSize } = constants;
+                    const positions = [
+                        { x: -cornerSize * 1.5, y: -cornerSize * 1.5 },
+                        { x: cornerSize * 0.5, y: -cornerSize * 1.5 },
+                        { x: cornerSize * 0.5, y: cornerSize * 0.5 },
+                        { x: -cornerSize * 1.5, y: cornerSize * 0.5 }
+                    ];
+
+                    const tl = gsap.timeline();
+                    corners.forEach((corner, index) => {
+                        tl.to(
+                            corner,
+                            {
+                                x: positions[index].x,
+                                y: positions[index].y,
+                                duration: 0.3,
+                                ease: 'power3.out'
+                            },
+                            0
+                        );
+                    });
+                }
+
+                resumeTimeout = setTimeout(() => {
+                    if (!activeTarget && cursorRef.current && spinTl.current) {
+                        const currentRotation = gsap.getProperty(cursorRef.current, 'rotation') as number;
+                        const normalizedRotation = currentRotation % 360;
+
+                        spinTl.current.kill();
+                        spinTl.current = gsap
+                            .timeline({ repeat: -1 })
+                            .to(cursorRef.current, { rotation: '+=360', duration: spinDuration, ease: 'none' });
+
+                        gsap.to(cursorRef.current, {
+                            rotation: normalizedRotation + 360,
+                            duration: spinDuration * (1 - normalizedRotation / 360),
+                            ease: 'none',
+                            onComplete: () => {
+                                spinTl.current?.restart();
+                            }
+                        });
+                    }
+                    resumeTimeout = null;
+                }, 50);
+
+                cleanupTarget(target);
+            };
+
+            currentTargetMove = targetMove;
+            currentLeaveHandler = leaveHandler;
+
+            target.addEventListener('mousemove', targetMove);
+            target.addEventListener('mouseleave', leaveHandler);
+        };
+
+        window.addEventListener('mouseover', enterHandler, { passive: true });
+
+        return () => {
+            window.removeEventListener('mousemove', moveHandler);
+            window.removeEventListener('mouseover', enterHandler);
+            window.removeEventListener('scroll', scrollHandler);
+            window.removeEventListener('mousedown', mouseDownHandler);
+            window.removeEventListener('mouseup', mouseUpHandler);
+
+            if (activeTarget) {
+                cleanupTarget(activeTarget);
+            }
+
+            spinTl.current?.kill();
+        };
+    }, [targetSelector, spinDuration, moveCursor, constants, initialPos]);
+
+    useEffect(() => {
+        if (!cursorRef.current || !spinTl.current) return;
+
+        if (spinTl.current.isActive()) {
+            spinTl.current.kill();
+            spinTl.current = gsap
+                .timeline({ repeat: -1 })
+                .to(cursorRef.current, { rotation: '+=360', duration: spinDuration, ease: 'none' });
+        }
+    }, [spinDuration]);
+
+    return (
+        <div
+            ref={cursorRef}
+            className="fixed top-0 left-0 w-0 h-0 pointer-events-none z-[9999] mix-blend-difference transform -translate-x-1/2 -translate-y-1/2"
+            style={{ willChange: 'transform' }}
+        >
+            <div
+                ref={dotRef}
+                className="absolute left-1/2 top-1/2 w-1 h-1 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2"
+                style={{ willChange: 'transform' }}
+            />
+            <div
+                className="target-cursor-corner absolute left-1/2 top-1/2 w-3 h-3 border-[3px] border-white transform -translate-x-[150%] -translate-y-[150%] border-r-0 border-b-0"
+                style={{ willChange: 'transform' }}
+            />
+            <div
+                className="target-cursor-corner absolute left-1/2 top-1/2 w-3 h-3 border-[3px] border-white transform translate-x-1/2 -translate-y-[150%] border-l-0 border-b-0"
+                style={{ willChange: 'transform' }}
+            />
+            <div
+                className="target-cursor-corner absolute left-1/2 top-1/2 w-3 h-3 border-[3px] border-white transform translate-x-1/2 translate-y-1/2 border-l-0 border-t-0"
+                style={{ willChange: 'transform' }}
+            />
+            <div
+                className="target-cursor-corner absolute left-1/2 top-1/2 w-3 h-3 border-[3px] border-white transform -translate-x-[150%] translate-y-1/2 border-r-0 border-t-0"
+                style={{ willChange: 'transform' }}
+            />
+        </div>
+    );
+};
+
+export default TargetCursor;
+--- END OF FILE src/components/bits/TargetCursor.tsx ---
+
+--- START OF FILE src/components/ui/blurry-button.tsx ---
+import * as React from 'react';
+import { cn } from '@/lib/utils';
+
+const BlurryButton = React.forwardRef<
+    HTMLButtonElement,
+    React.ButtonHTMLAttributes<HTMLButtonElement>
+>(({ className, children, ...props }, ref) => {
+    const internalRef = React.useRef<HTMLButtonElement>(null);
+
+    React.useImperativeHandle(ref, () => internalRef.current!);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+        const button = internalRef.current;
+        if (!button) return;
+
+        const rect = button.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        button.style.setProperty('--mouse-x', `${x}px`);
+        button.style.setProperty('--mouse-y', `${y}px`);
+    };
+
+    return (
+        <button
+            className={cn(
+                // Base styles
+                'relative inline-flex items-center justify-center whitespace-nowrap rounded-full px-8 py-2 text-base font-medium text-foreground transition-colors overflow-hidden',
+
+                // Glass effect
+                'bg-black/20 backdrop-blur-sm',
+
+                // Glassy border
+                'border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]',
+
+                // Hover and focus states
+                'hover:bg-black/30',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background',
+
+                // Disabled state
+                'disabled:pointer-events-none disabled:opacity-50',
+
+                // Pseudo-element for the mouse-reactive highlight
+                "before:content-[''] before:absolute before:inset-0 before:rounded-full",
+                'before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300',
+                "before:bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(255,255,255,0.15)_0%,transparent_70%)]",
+
+                className
+            )}
+            ref={internalRef}
+            onMouseMove={handleMouseMove}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+});
+BlurryButton.displayName = 'BlurryButton';
+
+export { BlurryButton };
+--- END OF FILE src/components/ui/blurry-button.tsx ---
 
 --- START OF FILE src/components/ui/button.tsx ---
 import * as React from "react"
@@ -1501,6 +3408,469 @@ export {
 
 --- END OF FILE src/components/ui/card.tsx ---
 
+--- START OF FILE src/components/ui/color-picker.tsx ---
+'use client';
+
+import Color from 'color';
+import { PipetteIcon } from 'lucide-react';
+import * as Slider from '@radix-ui/react-slider';
+import {
+    type ComponentProps,
+    createContext,
+    type HTMLAttributes,
+    memo,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+
+// Use InstanceType to get the type of a Color instance
+type ColorInstance = InstanceType<typeof Color>;
+
+interface ColorPickerContextValue {
+    color: ColorInstance;
+    mode: string;
+    setColor: (color: ColorInstance) => void;
+    setMode: (mode: string) => void;
+}
+
+const ColorPickerContext = createContext<ColorPickerContextValue | undefined>(
+    undefined
+);
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useColorPicker = () => {
+    const context = useContext(ColorPickerContext);
+    if (!context) {
+        throw new Error('useColorPicker must be used within a ColorPickerProvider');
+    }
+    return context;
+};
+
+// Omit conflicting `onChange` from HTMLAttributes and define our own
+export type ColorPickerProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> & {
+    value?: string;
+    defaultValue?: string;
+    onChange?: (value: string) => void;
+};
+
+export const ColorPicker = ({
+    value,
+    defaultValue = '#000000',
+    onChange,
+    className,
+    ...props
+}: ColorPickerProps) => {
+    const [colorState, setColorState] = useState(() => Color(value ?? defaultValue));
+    const [mode, setMode] = useState('hex');
+
+    useEffect(() => {
+        if (value) {
+            try {
+                setColorState(Color(value));
+            } catch {
+                // ignore invalid color
+            }
+        }
+    }, [value]);
+
+    const setColor = (newColor: ColorInstance) => {
+        setColorState(newColor);
+        if (onChange) {
+            onChange(newColor.hexa());
+        }
+    };
+
+    return (
+        <ColorPickerContext.Provider
+            value={{
+                color: colorState,
+                mode,
+                setColor,
+                setMode,
+            }}
+        >
+            <div
+                className={cn('flex size-full flex-col gap-4', className)}
+                {...props}
+            />
+        </ColorPickerContext.Provider>
+    );
+};
+
+export type ColorPickerSelectionProps = HTMLAttributes<HTMLDivElement>;
+
+export const ColorPickerSelection = memo(
+    ({ className, ...props }: ColorPickerSelectionProps) => {
+        const containerRef = useRef<HTMLDivElement>(null);
+        const [isDragging, setIsDragging] = useState(false);
+        const { color, setColor } = useColorPicker();
+        const { h, s, v } = color.hsv().object();
+
+        const handlePointerMove = useCallback(
+            (event: PointerEvent | React.PointerEvent<HTMLDivElement>) => {
+                if (!containerRef.current) return;
+                const rect = containerRef.current.getBoundingClientRect();
+                const x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+                const y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+
+                const newSaturation = (x / rect.width) * 100;
+                const newValue = 100 - (y / rect.height) * 100;
+
+                setColor(Color({ h, s: newSaturation, v: newValue }));
+            },
+            [h, setColor]
+        );
+
+        useEffect(() => {
+            const handlePointerUp = () => setIsDragging(false);
+            if (isDragging) {
+                document.addEventListener('pointermove', handlePointerMove);
+                document.addEventListener('pointerup', handlePointerUp);
+            }
+            return () => {
+                document.removeEventListener('pointermove', handlePointerMove);
+                document.removeEventListener('pointerup', handlePointerUp);
+            };
+        }, [isDragging, handlePointerMove]);
+
+        return (
+            <div
+                className={cn('relative size-full cursor-crosshair rounded', className)}
+                onPointerDown={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                    handlePointerMove(e.nativeEvent);
+                }}
+                ref={containerRef}
+                style={{
+                    backgroundColor: `hsl(${h}, 100%, 50%)`,
+                }}
+                {...props}
+            >
+                <div
+                    className="h-full w-full"
+                    style={{
+                        backgroundImage: `linear-gradient(to top, black, transparent), linear-gradient(to right, white, transparent)`
+                    }}
+                >
+                    <div
+                        className="-translate-x-1/2 -translate-y-1/2 pointer-events-none absolute h-4 w-4 rounded-full border-2 border-white"
+                        style={{
+                            left: `${s}%`,
+                            top: `${100 - v}%`,
+                            boxShadow: '0 0 0 1px rgba(0,0,0,0.5)',
+                            backgroundColor: color.hex()
+                        }}
+                    />
+                </div>
+            </div>
+        );
+    }
+);
+
+ColorPickerSelection.displayName = 'ColorPickerSelection';
+
+export type ColorPickerHueProps = ComponentProps<typeof Slider.Root>;
+
+export const ColorPickerHue = ({
+    className,
+    ...props
+}: ColorPickerHueProps) => {
+    const { color, setColor } = useColorPicker();
+    const { h } = color.hsl().object();
+
+    return (
+        <Slider.Root
+            className={cn('relative flex h-4 w-full touch-none items-center', className)}
+            max={360}
+            onValueChange={([hue]) => setColor(color.hue(hue))}
+            step={1}
+            value={[h]}
+            {...props}
+        >
+            <Slider.Track className="relative my-0.5 h-3 w-full grow rounded-full bg-[linear-gradient(90deg,#FF0000,#FFFF00,#00FF00,#00FFFF,#0000FF,#FF00FF,#FF0000)]" />
+            <Slider.Thumb className="block h-4 w-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
+        </Slider.Root>
+    );
+};
+
+export type ColorPickerAlphaProps = ComponentProps<typeof Slider.Root>;
+
+export const ColorPickerAlpha = ({
+    className,
+    ...props
+}: ColorPickerAlphaProps) => {
+    const { color, setColor } = useColorPicker();
+    const { r, g, b } = color.rgb().object();
+    const a = color.alpha();
+
+    return (
+        <Slider.Root
+            className={cn('relative flex h-4 w-full items-center touch-none', className)}
+            max={1}
+            onValueChange={([alpha]) => setColor(color.alpha(alpha))}
+            step={0.01}
+            value={[a]}
+            {...props}
+        >
+            <Slider.Track
+                className="relative my-0.5 h-3 w-full grow rounded-full"
+                style={{
+                    background:
+                        'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==") left center',
+                }}
+            >
+                <div className="absolute inset-0 rounded-full" style={{ background: `linear-gradient(to right, transparent, rgb(${r}, ${g}, ${b}))` }} />
+            </Slider.Track>
+            <Slider.Thumb className="block h-4 w-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
+        </Slider.Root>
+    );
+};
+
+export type ColorPickerEyeDropperProps = ComponentProps<typeof Button>;
+
+export const ColorPickerEyeDropper = ({
+    className,
+    ...props
+}: ColorPickerEyeDropperProps) => {
+    const { setColor } = useColorPicker();
+
+    const handleEyeDropper = async () => {
+        try {
+            // @ts-expect-error - EyeDropper API is experimental
+            const eyeDropper = new EyeDropper();
+            const result = await eyeDropper.open();
+            setColor(Color(result.sRGBHex));
+        } catch (error) {
+            console.error('EyeDropper failed:', error);
+        }
+    };
+
+    return (
+        <Button
+            className={cn('shrink-0 text-muted-foreground', className)}
+            onClick={handleEyeDropper}
+            size="icon"
+            variant="outline"
+            type="button"
+            {...props}
+        >
+            <PipetteIcon size={16} />
+        </Button>
+    );
+};
+
+export type ColorPickerOutputProps = ComponentProps<typeof SelectTrigger>;
+
+const formats = ['hex', 'rgb', 'hsl'];
+
+export const ColorPickerOutput = ({
+    className,
+    ...props
+}: ColorPickerOutputProps) => {
+    const { mode, setMode } = useColorPicker();
+
+    return (
+        <Select onValueChange={setMode} value={mode}>
+            <SelectTrigger className={cn("h-8 w-20 shrink-0 text-xs", className)} {...props}>
+                <SelectValue placeholder="Mode" />
+            </SelectTrigger>
+            <SelectContent>
+                {formats.map((format) => (
+                    <SelectItem className="text-xs" key={format} value={format}>
+                        {format.toUpperCase()}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
+};
+
+export type ColorPickerFormatProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'>;
+
+export const ColorPickerFormat = ({
+    className,
+    ...props
+}: ColorPickerFormatProps) => {
+    const { color, mode, setColor } = useColorPicker();
+    const [inputValue, setInputValue] = useState(color.hex());
+
+    const formatValue = useCallback(() => {
+        switch (mode) {
+            case 'hex':
+                return color.hexa();
+            case 'rgb':
+                return color.rgb().string();
+            case 'hsl':
+                return color.hsl().string();
+            default:
+                return color.hexa();
+        }
+    }, [color, mode]);
+
+    useEffect(() => {
+        setInputValue(formatValue());
+    }, [color, mode, formatValue]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const text = e.target.value;
+        setInputValue(text);
+        try {
+            setColor(Color(text));
+        } catch {
+            // Ignore invalid color strings
+        }
+    }
+
+    return (
+        <div className={cn('w-full rounded-md shadow-sm', className)} {...props}>
+            <Input
+                className="h-8 w-full bg-secondary px-2 text-xs shadow-none"
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+            />
+        </div>
+    );
+};
+--- END OF FILE src/components/ui/color-picker.tsx ---
+
+--- START OF FILE src/components/ui/dialog.tsx ---
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { XIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Dialog = DialogPrimitive.Root
+
+const DialogTrigger = DialogPrimitive.Trigger
+
+const DialogPortal = DialogPrimitive.Portal
+
+const DialogClose = DialogPrimitive.Close
+
+const DialogOverlay = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Overlay>,
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+    <DialogPrimitive.Overlay
+        ref={ref}
+        className={cn(
+            "fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            className
+        )}
+        {...props}
+    />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Content>,
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+    <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+            ref={ref}
+            className={cn(
+                "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+                className
+            )}
+            {...props}
+        >
+            {children}
+            <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <XIcon className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+            </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+    </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+const DialogHeader = ({
+    className,
+    ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+    <div
+        className={cn(
+            "flex flex-col space-y-1.5 text-center sm:text-left",
+            className
+        )}
+        {...props}
+    />
+)
+DialogHeader.displayName = "DialogHeader"
+
+const DialogFooter = ({
+    className,
+    ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+    <div
+        className={cn(
+            "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+            className
+        )}
+        {...props}
+    />
+)
+DialogFooter.displayName = "DialogFooter"
+
+const DialogTitle = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Title>,
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+    <DialogPrimitive.Title
+        ref={ref}
+        className={cn(
+            "text-lg font-semibold leading-none tracking-tight",
+            className
+        )}
+        {...props}
+    />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Description>,
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+    <DialogPrimitive.Description
+        ref={ref}
+        className={cn("text-sm text-muted-foreground", className)}
+        {...props}
+    />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+    Dialog,
+    DialogPortal,
+    DialogOverlay,
+    DialogClose,
+    DialogTrigger,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
+}
+--- END OF FILE src/components/ui/dialog.tsx ---
+
 --- START OF FILE src/components/ui/input.tsx ---
 import * as React from "react"
 
@@ -1554,9 +3924,39 @@ export { Label }
 
 --- END OF FILE src/components/ui/label.tsx ---
 
---- START OF FILE src/components/ui/select.tsx ---
-"use client"
+--- START OF FILE src/components/ui/popover.tsx ---
+import * as React from "react"
+import * as PopoverPrimitive from "@radix-ui/react-popover"
 
+import { cn } from "@/lib/utils"
+
+const Popover = PopoverPrimitive.Root
+
+const PopoverTrigger = PopoverPrimitive.Trigger
+
+const PopoverContent = React.forwardRef<
+    React.ElementRef<typeof PopoverPrimitive.Content>,
+    React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+>(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
+    <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+            ref={ref}
+            align={align}
+            sideOffset={sideOffset}
+            className={cn(
+                "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+                className
+            )}
+            {...props}
+        />
+    </PopoverPrimitive.Portal>
+))
+PopoverContent.displayName = PopoverPrimitive.Content.displayName
+
+export { Popover, PopoverTrigger, PopoverContent }
+--- END OF FILE src/components/ui/popover.tsx ---
+
+--- START OF FILE src/components/ui/select.tsx ---
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
@@ -2014,28 +4414,26 @@ export function cn(...inputs: ClassValue[]) {
 --- END OF FILE src/lib/utils.ts ---
 
 --- START OF FILE src/pages/HomePage.tsx ---
-import { tools } from '@/tools';
-import Dock, { DockItemData } from '@/components/bits/Dock';
+import { useOutletContext } from 'react-router-dom';
+import { LayoutContext } from '@/components/Layout';
 import ShinyText from '@/components/bits/ShinyText';
+import { BlurryButton } from '@/components/ui/blurry-button';
 
 export const HomePage = () => {
-    const dockItems: DockItemData[] = tools.map(tool => ({
-        id: tool.path,
-        label: tool.name,
-        icon: <span className="font-bold text-xl">{tool.name.charAt(0)}</span>,
-        path: tool.path,
-    }));
+    const { openMenu } = useOutletContext<LayoutContext>();
 
     return (
         <div className="container mx-auto h-full flex flex-col items-center justify-center text-center min-h-[calc(100vh-10rem)]">
-            <div className="mb-20">
-                <ShinyText text="Essential Online Tools" />
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
-                    A collection of free and simple web utilities for everyday tasks.
-                </p>
-            </div>
-
-            <Dock items={dockItems} />
+            <ShinyText
+                text="Essential Online Tools"
+                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight"
+            />
+            <p className="max-w-lg mx-auto mt-4 text-lg sm:text-xl text-muted-foreground">
+                A collection of free and simple web utilities for everyday tasks, right in your browser.
+            </p>
+            <BlurryButton className="mt-8" onClick={openMenu}>
+                Discover Tools
+            </BlurryButton>
         </div>
     );
 };
@@ -2070,8 +4468,8 @@ export const PlaceholderTool = ({ toolName }: PlaceholderToolProps) => {
 
 --- START OF FILE src/pages/tools/QRCodeGenerator.tsx ---
 import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
-import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -2080,7 +4478,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+    ColorPicker,
+    ColorPickerSelection,
+    ColorPickerHue,
+    ColorPickerAlpha,
+    ColorPickerEyeDropper,
+    ColorPickerOutput,
+    ColorPickerFormat
+} from '@/components/ui/color-picker';
 import { cn } from '@/lib/utils';
+import PixelBlast from '@/components/bits/PixelBlast';
 
 type Level = 'L' | 'M' | 'Q' | 'H';
 
@@ -2104,6 +4513,7 @@ interface QrCodePreviewProps {
     size: number;
     onSizeChange: (size: number) => void;
     onDownload: (format: 'png' | 'jpeg') => void;
+    onDownloadSVG: () => void;
     className?: string;
 }
 interface QrCodeControlsProps {
@@ -2134,36 +4544,65 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 };
 
 // --- Sub-Components with Typed Props ---
-const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, className }) => (
-    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8", className)}>
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, onDownloadSVG, className }) => (
+    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8 h-full", className)}>
         <div className="flex-grow w-full flex items-center justify-center min-h-0">
             <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
-                <QRCodeCanvas {...options} style={{ width: '100%', height: '100%' }} />
+                <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
             </div>
         </div>
         <div className="w-full max-w-xs mt-8 flex-shrink-0">
             <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
-            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={1024} step={8} />
+            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
         </div>
-        <div className="mt-6 flex items-center gap-4 flex-shrink-0">
+        <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
             <Button onClick={() => onDownload('png')} disabled={!options.value}>
-                <Download className="mr-2 h-4 w-4" /> Download PNG
+                <Download className="mr-2 h-4 w-4" /> PNG
             </Button>
             <Button variant="secondary" onClick={() => onDownload('jpeg')} disabled={!options.value}>
-                Download JPG
+                JPG
+            </Button>
+            <Button variant="outline" onClick={onDownloadSVG} disabled={!options.value}>
+                <Code className="mr-2 h-4 w-4" /> SVG
             </Button>
         </div>
     </Card>
 );
 
+const ColorPickerInput: FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
+    <div>
+        <Label className="mb-2 block">{label}</Label>
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
+                    <div className="w-5 h-5 rounded-sm border" style={{ backgroundColor: value }} />
+                    <span className="flex-1 truncate">{value}</span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4 border-none bg-card/80 backdrop-blur-xl shadow-2xl">
+                <ColorPicker value={value} onChange={onChange} className="w-full">
+                    <ColorPickerSelection className="h-40" />
+                    <ColorPickerHue className="h-4" />
+                    <ColorPickerAlpha className="h-4" />
+                    <div className="flex items-center justify-between pt-2">
+                        <ColorPickerEyeDropper />
+                        <ColorPickerOutput />
+                    </div>
+                    <ColorPickerFormat />
+                </ColorPicker>
+            </PopoverContent>
+        </Popover>
+    </div>
+);
+
 const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
-    <div className={cn("lg:col-span-1 space-y-6", className)}>
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+    <div className={cn("lg:col-span-1 space-y-6 flex flex-col h-full", className)}>
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl flex flex-col flex-grow">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
             </CardHeader>
-            <CardContent>
-                <Textarea value={text} onChange={e => onTextChange(e.target.value)} placeholder="Enter text or URL" className="h-28" />
+            <CardContent className='flex flex-col flex-grow'>
+                <Textarea value={text} onChange={e => onTextChange(e.target.value)} placeholder="Enter text or URL" className="flex-grow min-h-28" />
                 <Separator className="my-4" />
                 <Label className="mb-2 block">Error Correction</Label>
                 <Select value={level} onValueChange={onLevelChange}>
@@ -2183,14 +4622,8 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                 <CardTitle className="flex items-center gap-2"><Palette size={18} /> Style</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="fgColor" className="mb-2 block">Foreground</Label>
-                    <Input id="fgColor" type="color" value={fgColor} onChange={e => onFgColorChange(e.target.value)} className="p-1 h-12" />
-                </div>
-                <div>
-                    <Label htmlFor="bgColor" className="mb-2 block">Background</Label>
-                    <Input id="bgColor" type="color" value={bgColor} onChange={e => onBgColorChange(e.target.value)} className="p-1 h-12" />
-                </div>
+                <ColorPickerInput label="Foreground" value={fgColor} onChange={onFgColorChange} />
+                <ColorPickerInput label="Background" value={bgColor} onChange={onBgColorChange} />
             </CardContent>
         </Card>
 
@@ -2238,11 +4671,10 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
     </div>
 );
 
-
 // --- Main Component ---
 export const QRCodeGenerator = () => {
-    const [text, setText] = useState('Your text or URL goes here');
-    const [size, setSize] = useState(256);
+    const [text, setText] = useState('http://ave.dee.isep.ipp.pt/~1250182');
+    const [size, setSize] = useState(512);
     const [fgColor, setFgColor] = useState('#000000');
     const [bgColor, setBgColor] = useState('#ffffff');
     const [level, setLevel] = useState<Level>('M');
@@ -2251,6 +4683,7 @@ export const QRCodeGenerator = () => {
     const debouncedText = useDebounce(text, 500);
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
+
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -2262,12 +4695,14 @@ export const QRCodeGenerator = () => {
             reader.readAsDataURL(file);
         }
     };
+
     const handleLogoUrlChange = (value: string) => {
         setLogoUrl(value);
         if (value) {
             setLogoImage(null);
         }
     };
+
     const removeLogo = () => {
         setLogoImage(null);
         setLogoUrl('');
@@ -2276,19 +4711,63 @@ export const QRCodeGenerator = () => {
             fileInput.value = '';
         }
     };
+
     const handleDownload = (format: 'png' | 'jpeg') => {
-        const canvas = qrRef.current?.querySelector('canvas');
-        if (canvas) {
+        const svgElement = qrRef.current?.querySelector('svg');
+        if (svgElement) {
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const canvas = document.createElement('canvas');
+            const userSize = options.size;
+            canvas.width = userSize;
+            canvas.height = userSize;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const img = new Image();
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = () => {
+                ctx.save();
+                if (format === 'jpeg' || (bgColor && bgColor !== '#ffffff00' && bgColor !== 'transparent')) {
+                    ctx.fillStyle = bgColor || '#ffffff';
+                    ctx.fillRect(0, 0, userSize, userSize);
+                }
+                ctx.drawImage(img, 0, 0, userSize, userSize);
+                ctx.restore();
+                URL.revokeObjectURL(url);
+
+                const dataUrl = canvas.toDataURL(`image/${format}`, 1.0);
+                const link = document.createElement('a');
+                link.download = `qrcode.${format}`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+            img.src = url;
+        }
+    };
+
+    const handleDownloadSVG = () => {
+        const svgElement = qrRef.current?.querySelector('svg');
+        if (svgElement) {
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.download = `qrcode.${format}`;
-            link.href = canvas.toDataURL(`image/${format}`, 1.0);
+            link.download = 'qrcode.svg';
+            link.href = url;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
     };
+
     const finalLogoSrc = logoImage || debouncedLogoUrl;
-    const qrOptions: QrCodeOptions = {
+
+    const options: QrCodeOptions = {
         value: debouncedText,
         size: size,
         fgColor: fgColor,
@@ -2301,32 +4780,54 @@ export const QRCodeGenerator = () => {
             excavate: true,
         } : undefined,
     };
+
     return (
-        <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground tracking-tight">
-                QR Code Generator
-            </h2>
-            {/* Key Change: `items-start` is now prefixed with `lg:`, so it only applies on desktop. */}
-            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-start">
-                <QrCodeControls
-                    className="order-2 lg:order-1"
-                    text={text} onTextChange={setText}
-                    level={level} onLevelChange={(value) => setLevel(value as Level)}
-                    fgColor={fgColor} onFgColorChange={setFgColor}
-                    bgColor={bgColor} onBgColorChange={setBgColor}
-                    onImageUpload={handleImageUpload}
-                    logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
-                    onRemoveLogo={removeLogo}
-                    finalLogoSrc={finalLogoSrc}
+        <div className="relative h-full flex flex-col">
+            <div className="fixed inset-0 -z-10">
+                <PixelBlast
+                    variant="circle"
+                    pixelSize={6}
+                    color="#B19EEF"
+                    patternScale={3}
+                    patternDensity={1.2}
+                    pixelSizeJitter={0.5}
+                    enableRipples
+                    rippleSpeed={0.4}
+                    rippleThickness={0.12}
+                    rippleIntensityScale={1.5}
+                    liquid
+                    liquidStrength={0.12}
+                    liquidRadius={1.2}
+                    liquidWobbleSpeed={5}
+                    speed={0.6}
+                    edgeFade={0.25}
+                    transparent
                 />
-                <QrCodePreview
-                    className="order-1 lg:order-2"
-                    qrRef={qrRef}
-                    options={qrOptions}
-                    size={size}
-                    onSizeChange={setSize}
-                    onDownload={handleDownload}
-                />
+            </div>
+
+            <div className="flex-grow min-h-0 relative z-10">
+                <div className="h-full flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-stretch pt-10">
+                    <QrCodeControls
+                        className="order-2 lg:order-1"
+                        text={text} onTextChange={setText}
+                        level={level} onLevelChange={(value) => setLevel(value as Level)}
+                        fgColor={fgColor} onFgColorChange={setFgColor}
+                        bgColor={bgColor} onBgColorChange={setBgColor}
+                        onImageUpload={handleImageUpload}
+                        logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
+                        onRemoveLogo={removeLogo}
+                        finalLogoSrc={finalLogoSrc}
+                    />
+                    <QrCodePreview
+                        className="order-1 lg:order-2"
+                        qrRef={qrRef}
+                        options={options}
+                        size={size}
+                        onSizeChange={setSize}
+                        onDownload={handleDownload}
+                        onDownloadSVG={handleDownloadSVG}
+                    />
+                </div>
             </div>
         </div>
     );
