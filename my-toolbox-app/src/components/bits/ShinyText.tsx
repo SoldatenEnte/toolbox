@@ -1,21 +1,33 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface ShinyTextProps {
     text: string;
+    disabled?: boolean;
+    speed?: number;
     className?: string;
 }
 
-const ShinyText: React.FC<ShinyTextProps> = ({ text, className = '' }) => {
+const ShinyText: React.FC<ShinyTextProps> = ({ text, disabled = false, speed = 5, className = '' }) => {
+    const animationDuration = `${speed}s`;
+
     return (
-        <p className={`text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text animate-shine ${className}`}
+        <div
+            className={cn(
+                'bg-clip-text text-transparent',
+                !disabled && 'animate-shine',
+                className
+            )}
             style={{
-                backgroundImage: 'linear-gradient(120deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 1) 40%, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 80%)',
+                backgroundImage:
+                    'linear-gradient(60deg, var(--color-muted-foreground) 10%, white 50%, var(--color-muted-foreground) 70%)',
                 backgroundSize: '200% 100%',
                 WebkitBackgroundClip: 'text',
+                animationDuration,
             }}
         >
             {text}
-        </p>
+        </div>
     );
 };
 
