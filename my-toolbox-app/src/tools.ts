@@ -1,5 +1,5 @@
 import React from 'react';
-import { QRCodeGenerator } from './pages/tools/QRCodeGenerator';
+import { QRCodeGenerator } from '@/pages/tools/QRCodeGenerator';
 
 export interface Tool {
     name: string;
@@ -15,5 +15,4 @@ export const tools: Tool[] = [
         path: '/tools/qr-code-generator',
         component: QRCodeGenerator,
     },
-    // Add your next tool here
 ];
