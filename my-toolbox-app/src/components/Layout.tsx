@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import { tools } from '@/tools';
 import Beams from './bits/Beams';
 import { StaggeredMenu, StaggeredMenuItem, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
 import { ClickSpark } from './bits/ClickSpark';
+import { Home } from 'lucide-react';
 
 export type LayoutContext = {
     openMenu: () => void;
@@ -42,11 +43,16 @@ export const Layout = () => {
         })),
     ];
 
-
     const socialItems: StaggeredMenuSocialItem[] = [
         { label: 'GitHub', link: 'https://github.com' },
         { label: 'Twitter', link: 'https://twitter.com' },
     ];
+
+    const logo = !isHomePage ? (
+        <NavLink to="/" aria-label="Go to homepage" className="text-zinc-50 hover:text-white transition-colors">
+            <Home className="h-7 w-7" />
+        </NavLink>
+    ) : null;
 
     return (
         <div className="h-screen font-sans antialiased relative">
@@ -54,9 +60,9 @@ export const Layout = () => {
                 {isHomePage && (
                     <div className="absolute inset-0 -z-10">
                         <Beams
-                            beamWidth={2}
+                            beamWidth={3}
                             beamHeight={30}
-                            beamNumber={6}
+                            beamNumber={60}
                             speed={2}
                             noiseIntensity={1.75}
                             scale={0.2}
@@ -81,6 +87,7 @@ export const Layout = () => {
                         onToggle={toggleMenu}
                         onClose={closeMenu}
                         initialCursorPos={mousePosition.current}
+                        logo={logo}
                     />
 
                     <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 overflow-y-auto">

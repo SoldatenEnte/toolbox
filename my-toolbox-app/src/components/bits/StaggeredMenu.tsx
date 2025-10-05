@@ -20,7 +20,7 @@ export interface StaggeredMenuProps {
     displaySocials?: boolean;
     displayItemNumbering?: boolean;
     className?: string;
-    logoUrl?: string;
+    logo?: React.ReactNode;
     menuButtonColor?: string;
     openMenuButtonColor?: string;
     accentColor?: string;
@@ -42,7 +42,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     displaySocials = true,
     displayItemNumbering = true,
     className,
-    logoUrl,
+    logo,
     menuButtonColor = '#fff',
     openMenuButtonColor = '#fff',
     changeMenuColorOnOpen = true,
@@ -266,7 +266,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                 </div>
                 <header className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
-                        {logoUrl && <img src={logoUrl} alt="Logo" className="sm-logo-img block h-8 w-auto object-contain" draggable={false} width={110} height={24} />}
+                        {logo}
                     </div>
                     <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
                         <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em]" aria-hidden="true">

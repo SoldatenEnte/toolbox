@@ -65,7 +65,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 
 // --- Sub-Components with Typed Props ---
 const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, className }) => (
-    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8", className)}>
+    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8 h-full", className)}>
         <div className="flex-grow w-full flex items-center justify-center min-h-0">
             <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
                 <QRCodeCanvas {...options} style={{ width: '100%', height: '100%' }} />
@@ -87,13 +87,13 @@ const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeCha
 );
 
 const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
-    <div className={cn("lg:col-span-1 space-y-6", className)}>
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+    <div className={cn("lg:col-span-1 space-y-6 flex flex-col h-full", className)}>
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl flex flex-col flex-grow">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
             </CardHeader>
-            <CardContent>
-                <Textarea value={text} onChange={e => onTextChange(e.target.value)} placeholder="Enter text or URL" className="h-28" />
+            <CardContent className='flex flex-col flex-grow'>
+                <Textarea value={text} onChange={e => onTextChange(e.target.value)} placeholder="Enter text or URL" className="flex-grow min-h-28" />
                 <Separator className="my-4" />
                 <Label className="mb-2 block">Error Correction</Label>
                 <Select value={level} onValueChange={onLevelChange}>
@@ -171,7 +171,7 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
 
 // --- Main Component ---
 export const QRCodeGenerator = () => {
-    const [text, setText] = useState('Your text or URL goes here');
+    const [text, setText] = useState('https://reactbits.dev/');
     const [size, setSize] = useState(256);
     const [fgColor, setFgColor] = useState('#000000');
     const [bgColor, setBgColor] = useState('#ffffff');
@@ -232,7 +232,7 @@ export const QRCodeGenerator = () => {
         } : undefined,
     };
     return (
-        <div className="relative">
+        <div className="relative h-full flex flex-col">
             <div className="fixed inset-0 -z-10">
                 <PixelBlast
                     variant="circle"
@@ -255,11 +255,8 @@ export const QRCodeGenerator = () => {
                 />
             </div>
 
-            <div className="space-y-6 relative z-10">
-                <h2 className="text-3xl font-bold text-foreground tracking-tight">
-                    QR Code Generator
-                </h2>
-                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-start">
+            <div className="flex-grow min-h-0 relative z-10">
+                <div className="h-full flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-stretch pt-10">
                     <QrCodeControls
                         className="order-2 lg:order-1"
                         text={text} onTextChange={setText}
