@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
-import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+    ColorPicker,
+    ColorPickerSelection,
+    ColorPickerHue,
+    ColorPickerAlpha,
+    ColorPickerEyeDropper,
+    ColorPickerOutput,
+    ColorPickerFormat
+} from '@/components/ui/color-picker';
 import { cn } from '@/lib/utils';
 import PixelBlast from '@/components/bits/PixelBlast';
 
@@ -34,6 +44,7 @@ interface QrCodePreviewProps {
     size: number;
     onSizeChange: (size: number) => void;
     onDownload: (format: 'png' | 'jpeg') => void;
+    onDownloadSVG: () => void;
     className?: string;
 }
 interface QrCodeControlsProps {
@@ -64,26 +75,55 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 };
 
 // --- Sub-Components with Typed Props ---
-const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, className }) => (
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, onDownloadSVG, className }) => (
     <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8 h-full", className)}>
         <div className="flex-grow w-full flex items-center justify-center min-h-0">
             <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
-                <QRCodeCanvas {...options} style={{ width: '100%', height: '100%' }} />
+                <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
             </div>
         </div>
         <div className="w-full max-w-xs mt-8 flex-shrink-0">
             <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
-            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={1024} step={8} />
+            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
         </div>
-        <div className="mt-6 flex items-center gap-4 flex-shrink-0">
+        <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
             <Button onClick={() => onDownload('png')} disabled={!options.value}>
-                <Download className="mr-2 h-4 w-4" /> Download PNG
+                <Download className="mr-2 h-4 w-4" /> PNG
             </Button>
             <Button variant="secondary" onClick={() => onDownload('jpeg')} disabled={!options.value}>
-                Download JPG
+                JPG
+            </Button>
+            <Button variant="outline" onClick={onDownloadSVG} disabled={!options.value}>
+                <Code className="mr-2 h-4 w-4" /> SVG
             </Button>
         </div>
     </Card>
+);
+
+const ColorPickerInput: FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
+    <div>
+        <Label className="mb-2 block">{label}</Label>
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
+                    <div className="w-5 h-5 rounded-sm border" style={{ backgroundColor: value }} />
+                    <span className="flex-1 truncate">{value}</span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4 border-none bg-card/80 backdrop-blur-xl shadow-2xl">
+                <ColorPicker value={value} onChange={onChange} className="w-full">
+                    <ColorPickerSelection className="h-40" />
+                    <ColorPickerHue className="h-4" />
+                    <ColorPickerAlpha className="h-4" />
+                    <div className="flex items-center justify-between pt-2">
+                        <ColorPickerEyeDropper />
+                        <ColorPickerOutput />
+                    </div>
+                    <ColorPickerFormat />
+                </ColorPicker>
+            </PopoverContent>
+        </Popover>
+    </div>
 );
 
 const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
@@ -113,14 +153,8 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                 <CardTitle className="flex items-center gap-2"><Palette size={18} /> Style</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="fgColor" className="mb-2 block">Foreground</Label>
-                    <Input id="fgColor" type="color" value={fgColor} onChange={e => onFgColorChange(e.target.value)} className="p-1 h-12" />
-                </div>
-                <div>
-                    <Label htmlFor="bgColor" className="mb-2 block">Background</Label>
-                    <Input id="bgColor" type="color" value={bgColor} onChange={e => onBgColorChange(e.target.value)} className="p-1 h-12" />
-                </div>
+                <ColorPickerInput label="Foreground" value={fgColor} onChange={onFgColorChange} />
+                <ColorPickerInput label="Background" value={bgColor} onChange={onBgColorChange} />
             </CardContent>
         </Card>
 
@@ -168,11 +202,10 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
     </div>
 );
 
-
 // --- Main Component ---
 export const QRCodeGenerator = () => {
-    const [text, setText] = useState('https://reactbits.dev/');
-    const [size, setSize] = useState(256);
+    const [text, setText] = useState('http://ave.dee.isep.ipp.pt/~1250182');
+    const [size, setSize] = useState(512);
     const [fgColor, setFgColor] = useState('#000000');
     const [bgColor, setBgColor] = useState('#ffffff');
     const [level, setLevel] = useState<Level>('M');
@@ -181,6 +214,7 @@ export const QRCodeGenerator = () => {
     const debouncedText = useDebounce(text, 500);
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
+
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -192,12 +226,14 @@ export const QRCodeGenerator = () => {
             reader.readAsDataURL(file);
         }
     };
+
     const handleLogoUrlChange = (value: string) => {
         setLogoUrl(value);
         if (value) {
             setLogoImage(null);
         }
     };
+
     const removeLogo = () => {
         setLogoImage(null);
         setLogoUrl('');
@@ -206,19 +242,63 @@ export const QRCodeGenerator = () => {
             fileInput.value = '';
         }
     };
+
     const handleDownload = (format: 'png' | 'jpeg') => {
-        const canvas = qrRef.current?.querySelector('canvas');
-        if (canvas) {
+        const svgElement = qrRef.current?.querySelector('svg');
+        if (svgElement) {
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const canvas = document.createElement('canvas');
+            const userSize = options.size;
+            canvas.width = userSize;
+            canvas.height = userSize;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const img = new Image();
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = () => {
+                ctx.save();
+                if (format === 'jpeg' || (bgColor && bgColor !== '#ffffff00' && bgColor !== 'transparent')) {
+                    ctx.fillStyle = bgColor || '#ffffff';
+                    ctx.fillRect(0, 0, userSize, userSize);
+                }
+                ctx.drawImage(img, 0, 0, userSize, userSize);
+                ctx.restore();
+                URL.revokeObjectURL(url);
+
+                const dataUrl = canvas.toDataURL(`image/${format}`, 1.0);
+                const link = document.createElement('a');
+                link.download = `qrcode.${format}`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+            img.src = url;
+        }
+    };
+
+    const handleDownloadSVG = () => {
+        const svgElement = qrRef.current?.querySelector('svg');
+        if (svgElement) {
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.download = `qrcode.${format}`;
-            link.href = canvas.toDataURL(`image/${format}`, 1.0);
+            link.download = 'qrcode.svg';
+            link.href = url;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
     };
+
     const finalLogoSrc = logoImage || debouncedLogoUrl;
-    const qrOptions: QrCodeOptions = {
+
+    const options: QrCodeOptions = {
         value: debouncedText,
         size: size,
         fgColor: fgColor,
@@ -231,6 +311,7 @@ export const QRCodeGenerator = () => {
             excavate: true,
         } : undefined,
     };
+
     return (
         <div className="relative h-full flex flex-col">
             <div className="fixed inset-0 -z-10">
@@ -271,10 +352,11 @@ export const QRCodeGenerator = () => {
                     <QrCodePreview
                         className="order-1 lg:order-2"
                         qrRef={qrRef}
-                        options={qrOptions}
+                        options={options}
                         size={size}
                         onSizeChange={setSize}
                         onDownload={handleDownload}
+                        onDownloadSVG={handleDownloadSVG}
                     />
                 </div>
             </div>
