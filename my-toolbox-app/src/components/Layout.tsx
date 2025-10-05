@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, useLocation, useOutletContext } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { tools } from '@/tools';
 import Beams from './bits/Beams';
 import { StaggeredMenu, StaggeredMenuItem, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
@@ -9,15 +9,21 @@ export type LayoutContext = {
     openMenu: () => void;
 };
 
-export const useLayout = () => {
-    return useOutletContext<LayoutContext>();
-};
-
-
 export const Layout = () => {
     const location = useLocation();
     const isHomePage = location.pathname === '/';
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const mousePosition = useRef({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const handleMouseMove = (event: MouseEvent) => {
+            mousePosition.current = { x: event.clientX, y: event.clientY };
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, []);
 
     const toggleMenu = () => setIsMenuOpen(prev => !prev);
     const openMenu = () => setIsMenuOpen(true);
@@ -48,9 +54,9 @@ export const Layout = () => {
                 {isHomePage && (
                     <div className="absolute inset-0 -z-10">
                         <Beams
-                            beamWidth={1.5}
+                            beamWidth={2}
                             beamHeight={30}
-                            beamNumber={10}
+                            beamNumber={6}
                             speed={2}
                             noiseIntensity={1.75}
                             scale={0.2}
@@ -74,6 +80,7 @@ export const Layout = () => {
                         isOpen={isMenuOpen}
                         onToggle={toggleMenu}
                         onClose={closeMenu}
+                        initialCursorPos={mousePosition.current}
                     />
 
                     <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 overflow-y-auto">

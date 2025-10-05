@@ -1,6 +1,7 @@
 import React, { useCallback, useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { gsap } from 'gsap';
+import TargetCursor from './TargetCursor';
 
 export interface StaggeredMenuItem {
     label: string;
@@ -30,6 +31,7 @@ export interface StaggeredMenuProps {
     isOpen: boolean;
     onToggle: () => void;
     onClose: () => void;
+    initialCursorPos?: { x: number; y: number };
 }
 
 export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
@@ -51,6 +53,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     isOpen,
     onToggle,
     onClose,
+    initialCursorPos
 }: StaggeredMenuProps) => {
     const panelRef = useRef<HTMLDivElement | null>(null);
     const preLayersRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +72,38 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     const busyRef = useRef(false);
     const itemEntranceTweenRef = useRef<gsap.core.Tween | null>(null);
     const isMounted = useRef(false);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
+        const handleMediaQueryChange = (e: MediaQueryListEvent) => {
+            setIsDesktop(e.matches);
+        };
+        setIsDesktop(mediaQuery.matches);
+        mediaQuery.addEventListener('change', handleMediaQueryChange);
+        return () => {
+            mediaQuery.removeEventListener('change', handleMediaQueryChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                panelRef.current && !panelRef.current.contains(event.target as Node) &&
+                toggleBtnRef.current && !toggleBtnRef.current.contains(event.target as Node)
+            ) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen, onClose]);
+
 
     useLayoutEffect(() => {
         const ctx = gsap.context(() => {
@@ -220,6 +255,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
     return (
         <div className="sm-scope z-50" style={wrapperStyle}>
+            {isDesktop && isOpen && <TargetCursor targetSelector=".sm-panel-item, .sm-socials-link, .sm-toggle" initialPos={initialCursorPos} />}
             <div className={(className ? className + ' ' : '') + 'staggered-menu-wrapper relative w-full h-full z-40'} style={accentColor ? ({ ['--sm-accent']: accentColor } as React.CSSProperties) : undefined} data-position={position} data-open={isOpen || undefined}>
                 <div ref={preLayersRef} className="sm-prelayers absolute top-0 right-0 bottom-0 pointer-events-none z-[5]" aria-hidden="true">
                     {(() => {
@@ -232,7 +268,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
                         {logoUrl && <img src={logoUrl} alt="Logo" className="sm-logo-img block h-8 w-auto object-contain" draggable={false} width={110} height={24} />}
                     </div>
-                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 cursor-pointer font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
+                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
                         <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em]" aria-hidden="true">
                             <span ref={textInnerRef} className="sm-toggle-textInner flex flex-col leading-none">
                                 {textLines.map((l, i) => (<span className="sm-toggle-line block h-[1em] leading-none" key={i}>{l}</span>))}
@@ -268,7 +304,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                     </div>
                 </aside>
             </div>
-            <style>{`.sm-scope .sm-panel-item { position: relative; color: #a1a1aa; font-weight: 600; font-size: 4rem; cursor: pointer; line-height: 1; letter-spacing: -2px; text-transform: uppercase; transition: background 0.25s, color 0.25s; display: inline-block; text-decoration: none; padding-right: 1.4em; } .sm-scope .sm-panel-item:hover { color: var(--sm-accent, #FAFAFA); } .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; } .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.1em; right: 0; font-size: 18px; font-weight: 400; color: var(--sm-accent, #FAFAFA); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); } @media (max-width: 640px) { .sm-scope .sm-panel-item {font-size: 3rem;} } .sm-socials-title { margin: 0; font-size: 1rem; font-weight: 500; color: var(--sm-accent, #FAFAFA); } .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #a1a1aa; text-decoration: none; position: relative; padding: 2px 0; display: inline-block; transition: color 0.3s ease, opacity 0.3s ease; }`}</style>
+            <style>{`.sm-scope .sm-panel-item { position: relative; color: #a1a1aa; font-weight: 600; font-size: 4rem; line-height: 1; letter-spacing: -2px; text-transform: uppercase; transition: background 0.25s, color 0.25s; display: inline-block; text-decoration: none; padding-right: 1.4em; } .sm-scope .sm-panel-item:hover { color: var(--sm-accent, #FAFAFA); } .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; } .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.1em; right: 0; font-size: 18px; font-weight: 400; color: var(--sm-accent, #FAFAFA); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); } @media (max-width: 640px) { .sm-scope .sm-panel-item {font-size: 3rem;} } .sm-socials-title { margin: 0; font-size: 1rem; font-weight: 500; color: var(--sm-accent, #FAFAFA); } .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #a1a1aa; text-decoration: none; position: relative; padding: 2px 0; display: inline-block; transition: color 0.3s ease, opacity 0.3s ease; }`}</style>
         </div>
     );
 };
