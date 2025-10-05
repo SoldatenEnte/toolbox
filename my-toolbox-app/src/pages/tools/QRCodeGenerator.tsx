@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon } from 'lucide-react';
+import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 type Level = 'L' | 'M' | 'Q' | 'H';
 
 // --- Type Definitions for Component Props ---
-
 interface QrCodeOptions {
     value: string;
     size: number;
@@ -27,15 +27,14 @@ interface QrCodeOptions {
         excavate: boolean;
     };
 }
-
 interface QrCodePreviewProps {
     qrRef: RefObject<HTMLDivElement | null>;
     options: QrCodeOptions;
     size: number;
     onSizeChange: (size: number) => void;
     onDownload: (format: 'png' | 'jpeg') => void;
+    className?: string;
 }
-
 interface QrCodeControlsProps {
     text: string;
     onTextChange: (value: string) => void;
@@ -46,12 +45,12 @@ interface QrCodeControlsProps {
     bgColor: string;
     onBgColorChange: (value: string) => void;
     onImageUpload: (event: ChangeEvent<HTMLInputElement>) => void;
-    logoImage: string | null;
     logoUrl: string;
     onLogoUrlChange: (value: string) => void;
     onRemoveLogo: () => void;
+    finalLogoSrc: string;
+    className?: string;
 }
-
 
 // --- Custom Hook ---
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -63,19 +62,19 @@ const useDebounce = <T,>(value: T, delay: number): T => {
     return debouncedValue;
 };
 
-
 // --- Sub-Components with Typed Props ---
-
-const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload }) => (
-    <Card className="lg:col-span-2 flex flex-col items-center justify-center bg-muted/40 p-6 sm:p-8 border-2 border-dashed">
-        <div ref={qrRef} className="p-4 bg-white shadow-md rounded-lg transition-all" style={{ backgroundColor: options.bgColor }}>
-            <QRCodeCanvas {...options} />
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, className }) => (
+    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8", className)}>
+        <div className="flex-grow w-full flex items-center justify-center min-h-0">
+            <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
+                <QRCodeCanvas {...options} style={{ width: '100%', height: '100%' }} />
+            </div>
         </div>
-        <div className="w-full max-w-xs mt-6">
-            <Label className="block text-center text-sm font-medium text-foreground mb-3">Size: {size}px</Label>
+        <div className="w-full max-w-xs mt-8 flex-shrink-0">
+            <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
             <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={1024} step={8} />
         </div>
-        <div className="mt-8 flex items-center gap-4">
+        <div className="mt-6 flex items-center gap-4 flex-shrink-0">
             <Button onClick={() => onDownload('png')} disabled={!options.value}>
                 <Download className="mr-2 h-4 w-4" /> Download PNG
             </Button>
@@ -86,9 +85,9 @@ const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeCha
     </Card>
 );
 
-const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoImage, logoUrl, onLogoUrlChange, onRemoveLogo }) => (
-    <div className="lg:col-span-1 space-y-6">
-        <Card>
+const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
+    <div className={cn("lg:col-span-1 space-y-6", className)}>
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
             </CardHeader>
@@ -108,7 +107,7 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
             </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Palette size={18} /> Style</CardTitle>
             </CardHeader>
@@ -124,18 +123,22 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
             </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><ImageIcon size={18} /> Logo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div>
-                    <Label htmlFor="logoFile" className="mb-2 block text-sm">Upload File</Label>
-                    <Input id="logoFile" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={onImageUpload} className="file:text-primary file:font-semibold" />
-                </div>
-                <div className="relative">
-                    <Separator className="absolute top-1/2 -translate-y-1/2" />
-                    <p className="text-xs text-muted-foreground bg-card px-2 relative z-10 w-min mx-auto">OR</p>
+                <Button asChild variant="outline" className="w-full">
+                    <Label htmlFor="logoFile" className="cursor-pointer">
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Upload an Image
+                    </Label>
+                </Button>
+                <Input id="logoFile" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={onImageUpload} className="hidden" />
+
+                <div className="relative flex justify-center">
+                    <Separator className="absolute top-1/2 -translate-y-1/2 w-full" />
+                    <span className="text-xs text-muted-foreground bg-card px-2 relative z-10">OR</span>
                 </div>
                 <div>
                     <Label htmlFor="logoUrl" className="mb-2 block text-sm">Paste Image URL</Label>
@@ -144,10 +147,20 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                         <Input id="logoUrl" type="url" placeholder="https://example.com/logo.png" value={logoUrl} onChange={e => onLogoUrlChange(e.target.value)} className="pl-9" />
                     </div>
                 </div>
-                {(logoImage || logoUrl) && (
-                    <Button variant="ghost" size="sm" className="mt-3 w-full text-destructive hover:text-destructive" onClick={onRemoveLogo}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Remove Logo
-                    </Button>
+
+                {finalLogoSrc && (
+                    <div className="pt-2 space-y-3">
+                        <Separator />
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <img src={finalLogoSrc} alt="Logo Preview" className="h-12 w-12 rounded-md border object-contain p-1 flex-shrink-0" />
+                                <p className="text-sm font-medium text-foreground truncate">Logo Preview</p>
+                            </div>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive flex-shrink-0" onClick={onRemoveLogo}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
                 )}
             </CardContent>
         </Card>
@@ -156,7 +169,6 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
 
 
 // --- Main Component ---
-
 export const QRCodeGenerator = () => {
     const [text, setText] = useState('Your text or URL goes here');
     const [size, setSize] = useState(256);
@@ -165,35 +177,34 @@ export const QRCodeGenerator = () => {
     const [level, setLevel] = useState<Level>('M');
     const [logoImage, setLogoImage] = useState<string | null>(null);
     const [logoUrl, setLogoUrl] = useState<string>('');
-
     const debouncedText = useDebounce(text, 500);
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
-
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoImage(reader.result as string);
-                setLogoUrl(''); // Prioritize file upload
+                setLogoUrl('');
             };
             reader.readAsDataURL(file);
         }
     };
-
     const handleLogoUrlChange = (value: string) => {
         setLogoUrl(value);
         if (value) {
-            setLogoImage(null); // Prioritize URL if user types in it
+            setLogoImage(null);
         }
     };
-
     const removeLogo = () => {
         setLogoImage(null);
         setLogoUrl('');
+        const fileInput = document.getElementById('logoFile') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
+        }
     };
-
     const handleDownload = (format: 'png' | 'jpeg') => {
         const canvas = qrRef.current?.querySelector('canvas');
         if (canvas) {
@@ -205,9 +216,7 @@ export const QRCodeGenerator = () => {
             document.body.removeChild(link);
         }
     };
-
     const finalLogoSrc = logoImage || debouncedLogoUrl;
-
     const qrOptions: QrCodeOptions = {
         value: debouncedText,
         size: size,
@@ -221,23 +230,26 @@ export const QRCodeGenerator = () => {
             excavate: true,
         } : undefined,
     };
-
     return (
         <div className="space-y-6">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
                 QR Code Generator
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* Key Change: `items-start` is now prefixed with `lg:`, so it only applies on desktop. */}
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-start">
                 <QrCodeControls
+                    className="order-2 lg:order-1"
                     text={text} onTextChange={setText}
                     level={level} onLevelChange={(value) => setLevel(value as Level)}
                     fgColor={fgColor} onFgColorChange={setFgColor}
                     bgColor={bgColor} onBgColorChange={setBgColor}
-                    logoImage={logoImage} onImageUpload={handleImageUpload}
+                    onImageUpload={handleImageUpload}
                     logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
                     onRemoveLogo={removeLogo}
+                    finalLogoSrc={finalLogoSrc}
                 />
                 <QrCodePreview
+                    className="order-1 lg:order-2"
                     qrRef={qrRef}
                     options={qrOptions}
                     size={size}
