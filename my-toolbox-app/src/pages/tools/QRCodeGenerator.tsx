@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import PixelBlast from '@/components/bits/PixelBlast';
 
 type Level = 'L' | 'M' | 'Q' | 'H';
 
@@ -231,31 +232,54 @@ export const QRCodeGenerator = () => {
         } : undefined,
     };
     return (
-        <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground tracking-tight">
-                QR Code Generator
-            </h2>
-            {/* Key Change: `items-start` is now prefixed with `lg:`, so it only applies on desktop. */}
-            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-start">
-                <QrCodeControls
-                    className="order-2 lg:order-1"
-                    text={text} onTextChange={setText}
-                    level={level} onLevelChange={(value) => setLevel(value as Level)}
-                    fgColor={fgColor} onFgColorChange={setFgColor}
-                    bgColor={bgColor} onBgColorChange={setBgColor}
-                    onImageUpload={handleImageUpload}
-                    logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
-                    onRemoveLogo={removeLogo}
-                    finalLogoSrc={finalLogoSrc}
+        <div className="relative">
+            <div className="fixed inset-0 -z-10">
+                <PixelBlast
+                    variant="circle"
+                    pixelSize={6}
+                    color="#B19EEF"
+                    patternScale={3}
+                    patternDensity={1.2}
+                    pixelSizeJitter={0.5}
+                    enableRipples
+                    rippleSpeed={0.4}
+                    rippleThickness={0.12}
+                    rippleIntensityScale={1.5}
+                    liquid
+                    liquidStrength={0.12}
+                    liquidRadius={1.2}
+                    liquidWobbleSpeed={5}
+                    speed={0.6}
+                    edgeFade={0.25}
+                    transparent
                 />
-                <QrCodePreview
-                    className="order-1 lg:order-2"
-                    qrRef={qrRef}
-                    options={qrOptions}
-                    size={size}
-                    onSizeChange={setSize}
-                    onDownload={handleDownload}
-                />
+            </div>
+
+            <div className="space-y-6 relative z-10">
+                <h2 className="text-3xl font-bold text-foreground tracking-tight">
+                    QR Code Generator
+                </h2>
+                <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-start">
+                    <QrCodeControls
+                        className="order-2 lg:order-1"
+                        text={text} onTextChange={setText}
+                        level={level} onLevelChange={(value) => setLevel(value as Level)}
+                        fgColor={fgColor} onFgColorChange={setFgColor}
+                        bgColor={bgColor} onBgColorChange={setBgColor}
+                        onImageUpload={handleImageUpload}
+                        logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
+                        onRemoveLogo={removeLogo}
+                        finalLogoSrc={finalLogoSrc}
+                    />
+                    <QrCodePreview
+                        className="order-1 lg:order-2"
+                        qrRef={qrRef}
+                        options={qrOptions}
+                        size={size}
+                        onSizeChange={setSize}
+                        onDownload={handleDownload}
+                    />
+                </div>
             </div>
         </div>
     );

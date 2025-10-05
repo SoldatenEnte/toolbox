@@ -1,0 +1,2334 @@
+--- START OF FILE project_bundle.txt ---
+
+--- PROJECT STRUCTURE ---
+
+my-toolbox-app/
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   ├── bits/
+│   │   │   ├── Beams.tsx
+│   │   │   ├── ClickSpark.tsx
+│   │   │   ├── Dock.tsx
+│   │   │   ├── ShinyText.tsx
+│   │   │   └── StaggeredMenu.tsx
+│   │   ├── ui/
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── sheet.tsx
+│   │   │   ├── slider.tsx
+│   │   │   └── textarea.tsx
+│   │   └── Layout.tsx
+│   ├── hooks/
+│   ├── lib/
+│   │   └── utils.ts
+│   ├── pages/
+│   │   ├── tools/
+│   │   │   ├── PlaceholderTool.tsx
+│   │   │   └── QRCodeGenerator.tsx
+│   │   └── HomePage.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── tools.ts
+├── .gitignore
+├── README.md
+├── components.json
+├── eslint.config.js
+├── index.html
+├── package.json
+├── postcss.config.mjs
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+--- END OF PROJECT STRUCTURE ---
+
+--- START OF FILE .gitignore ---
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+--- END OF FILE .gitignore ---
+
+--- START OF FILE README.md ---
+# React + TypeScript + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+--- END OF FILE README.md ---
+
+--- START OF FILE components.json ---
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {}
+}
+
+--- END OF FILE components.json ---
+
+--- START OF FILE eslint.config.js ---
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
+
+--- END OF FILE eslint.config.js ---
+
+--- START OF FILE index.html ---
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toolbox</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+--- END OF FILE index.html ---
+
+--- START OF FILE package.json ---
+{
+  "name": "my-toolbox-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slider": "^1.3.6",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.3.0",
+    "@tailwindcss/postcss": "^4.1.14",
+    "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "gsap": "^3.13.0",
+    "lucide-react": "^0.544.0",
+    "motion": "^12.23.22",
+    "postcss": "^8.5.6",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.14",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/node": "^24.6.2",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "^9.36.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.22",
+    "globals": "^16.4.0",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.45.0",
+    "vite": "^7.1.7"
+  }
+}
+
+--- END OF FILE package.json ---
+
+--- START OF FILE postcss.config.mjs ---
+export default {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+--- END OF FILE postcss.config.mjs ---
+
+--- START OF FILE tsconfig.app.json ---
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}
+
+--- END OF FILE tsconfig.app.json ---
+
+--- START OF FILE tsconfig.json ---
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path Alias Configuration */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+--- END OF FILE tsconfig.json ---
+
+--- START OF FILE tsconfig.node.json ---
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noEmit": false
+  },
+  "include": ["vite.config.ts"]
+}
+--- END OF FILE tsconfig.node.json ---
+
+--- START OF FILE vite.config.ts ---
+import path from "path"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})
+--- END OF FILE vite.config.ts ---
+
+--- START OF FILE src/index.css ---
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@keyframes blob {
+	0% { transform: translate(0px, 0px) scale(1); }
+	33% { transform: translate(30px, -50px) scale(1.1); }
+	66% { transform: translate(-20px, 20px) scale(0.9); }
+	100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes shine {
+  from { background-position: 100%; }
+  to { background-position: -100%; }
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: "Inter", system-ui, sans-serif;
+  --animate-blob: blob 7s infinite;
+  --animate-shine: shine 5s linear infinite;
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.21 0.006 285.885);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+--- END OF FILE src/index.css ---
+
+--- START OF FILE src/main.tsx ---
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './index.css';
+
+import { Layout } from '@/components/Layout';
+import { HomePage } from '@/pages/HomePage';
+import { tools } from '@/tools';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      ...tools.map(tool => ({
+        path: tool.path,
+        element: <tool.component />,
+      })),
+    ],
+  },
+]);
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+--- END OF FILE src/main.tsx ---
+
+--- START OF FILE src/tools.ts ---
+import React from 'react';
+import { QRCodeGenerator } from '@/pages/tools/QRCodeGenerator';
+import { PlaceholderTool } from '@/pages/tools/PlaceholderTool';
+
+export interface Tool {
+    name: string;
+    description: string;
+    path: string;
+    component: React.ComponentType;
+}
+
+const createPlaceholder = (toolName: string): React.ComponentType => {
+    const PlaceholderComponent = () => React.createElement(PlaceholderTool, { toolName });
+    PlaceholderComponent.displayName = `Placeholder(${toolName})`;
+    return PlaceholderComponent;
+};
+
+export const tools: Tool[] = [
+    {
+        name: 'QR Code Generator',
+        description: 'Create and customize a QR code.',
+        path: '/tools/qr-code-generator',
+        component: QRCodeGenerator,
+    },
+    {
+        name: 'JSON Formatter',
+        description: 'Beautify and validate your JSON data.',
+        path: '/tools/json-formatter',
+        component: createPlaceholder('JSON Formatter'),
+    },
+    {
+        name: 'Color Converter',
+        description: 'Convert colors between HEX, RGB, and HSL.',
+        path: '/tools/color-converter',
+        component: createPlaceholder('Color Converter'),
+    },
+    {
+        name: 'Lorem Ipsum Generator',
+        description: 'Generate placeholder text for your designs.',
+        path: '/tools/lorem-ipsum-generator',
+        component: createPlaceholder('Lorem Ipsum Generator'),
+    },
+    {
+        name: 'Base64 Encoder',
+        description: 'Encode and decode text to Base64.',
+        path: '/tools/base64-encoder',
+        component: createPlaceholder('Base64 Encoder'),
+    },
+];
+--- END OF FILE src/tools.ts ---
+
+--- START OF FILE src/components/Layout.tsx ---
+import { Outlet } from 'react-router-dom';
+import { tools } from '@/tools';
+import Beams from './bits/Beams';
+import { StaggeredMenu, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
+import { ClickSpark } from './bits/ClickSpark';
+
+export const Layout = () => {
+    const menuItems = tools.map(tool => ({
+        label: tool.name,
+        ariaLabel: `Go to ${tool.name}`,
+        link: tool.path,
+    }));
+
+    const socialItems: StaggeredMenuSocialItem[] = [
+        { label: 'GitHub', link: 'https://github.com' },
+        { label: 'Twitter', link: 'https://twitter.com' },
+    ];
+
+    return (
+        <div className="h-screen font-sans antialiased relative">
+            <ClickSpark>
+                <div className="absolute inset-0 -z-10">
+                    {/* FIX: Applying your requested Beam properties */}
+                    <Beams
+                        beamWidth={3}
+                        beamHeight={30}
+                        beamNumber={20}
+                        speed={2}
+                        noiseIntensity={1.75}
+                        scale={0.2}
+                        rotation={30}
+                    />
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col">
+                    {/* FIX: Configuring StaggeredMenu for a dark theme and enabling socials */}
+                    <StaggeredMenu
+                        items={menuItems}
+                        socialItems={socialItems}
+                        displaySocials={true}
+                        isFixed={true}
+                        colors={['#18181b', '#27272a']} // zinc-900, zinc-800
+                        accentColor="#FAFAFA" // zinc-50
+                        openMenuButtonColor="#FAFAFA"
+                    />
+
+                    <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 overflow-y-auto">
+                        <Outlet />
+                    </main>
+                </div>
+            </ClickSpark>
+        </div>
+    );
+};
+--- END OF FILE src/components/Layout.tsx ---
+
+--- START OF FILE src/components/bits/Beams.tsx ---
+import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo, FC, ReactNode } from 'react';
+import * as THREE from 'three';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { PerspectiveCamera } from '@react-three/drei';
+import { degToRad } from 'three/src/math/MathUtils.js';
+
+type UniformValue = THREE.IUniform<unknown> | unknown;
+interface ExtendMaterialConfig {
+    header: string;
+    vertexHeader?: string;
+    fragmentHeader?: string;
+    material?: THREE.MeshPhysicalMaterialParameters & { fog?: boolean };
+    uniforms?: Record<string, UniformValue>;
+    vertex?: Record<string, string>;
+    fragment?: Record<string, string>;
+}
+type ShaderWithDefines = THREE.ShaderLibShader & { defines?: Record<string, string | number | boolean>; };
+
+function extendMaterial<T extends THREE.Material = THREE.Material>(BaseMaterial: new (params?: THREE.MaterialParameters) => T, cfg: ExtendMaterialConfig): THREE.ShaderMaterial {
+    const physical = THREE.ShaderLib.physical as ShaderWithDefines;
+    const { vertexShader: baseVert, fragmentShader: baseFrag, uniforms: baseUniforms } = physical;
+    const baseDefines = physical.defines ?? {};
+    const uniforms: Record<string, THREE.IUniform> = THREE.UniformsUtils.clone(baseUniforms);
+    const defaults = new BaseMaterial(cfg.material || {}) as T & { color?: THREE.Color; roughness?: number; metalness?: number; envMap?: THREE.Texture; envMapIntensity?: number; };
+    if (defaults.color) uniforms.diffuse.value = defaults.color;
+    if ('roughness' in defaults) uniforms.roughness.value = defaults.roughness;
+    if ('metalness' in defaults) uniforms.metalness.value = defaults.metalness;
+    if ('envMap' in defaults) uniforms.envMap.value = defaults.envMap;
+    if ('envMapIntensity' in defaults) uniforms.envMapIntensity.value = defaults.envMapIntensity;
+    Object.entries(cfg.uniforms ?? {}).forEach(([key, u]) => {
+        uniforms[key] = u !== null && typeof u === 'object' && 'value' in u ? (u as THREE.IUniform<unknown>) : ({ value: u } as THREE.IUniform<unknown>);
+    });
+    let vert = `${cfg.header}\n${cfg.vertexHeader ?? ''}\n${baseVert}`;
+    let frag = `${cfg.header}\n${cfg.fragmentHeader ?? ''}\n${baseFrag}`;
+    for (const [inc, code] of Object.entries(cfg.vertex ?? {})) { vert = vert.replace(inc, `${inc}\n${code}`); }
+    for (const [inc, code] of Object.entries(cfg.fragment ?? {})) { frag = frag.replace(inc, `${inc}\n${code}`); }
+    const mat = new THREE.ShaderMaterial({ defines: { ...baseDefines }, uniforms, vertexShader: vert, fragmentShader: frag, lights: true, fog: !!cfg.material?.fog });
+    return mat;
+}
+
+// FIX: Removed all positioning classes (`absolute`, `inset-0`, `-z-10`).
+// This component now passively fills its parent.
+const CanvasWrapper: FC<{ children: ReactNode }> = ({ children }) => (
+    <Canvas dpr={[1, 2]} frameloop="always" className="w-full h-full">
+        {children}
+    </Canvas>
+);
+
+const hexToNormalizedRGB = (hex: string): [number, number, number] => {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    return [r / 255, g / 255, b / 255];
+};
+
+const noise = `
+float random (in vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233)))* 43758.5453123); }
+float noise (in vec2 st) {
+    vec2 i = floor(st); vec2 f = fract(st);
+    float a = random(i); float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0)); float d = random(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+vec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
+float cnoise(vec3 P){
+  vec3 Pi0 = floor(P); vec3 Pi1 = Pi0 + vec3(1.0);
+  Pi0 = mod(Pi0, 289.0); Pi1 = mod(Pi1, 289.0);
+  vec3 Pf0 = fract(P); vec3 Pf1 = Pf0 - vec3(1.0);
+  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x); vec4 iy = vec4(Pi0.yy, Pi1.yy);
+  vec4 iz0 = Pi0.zzzz; vec4 iz1 = Pi1.zzzz;
+  vec4 ixy = permute(permute(ix) + iy);
+  vec4 ixy0 = permute(ixy + iz0); vec4 ixy1 = permute(ixy + iz1);
+  vec4 gx0 = ixy0 / 7.0; vec4 gy0 = fract(floor(gx0) / 7.0) - 0.5;
+  gx0 = fract(gx0); vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
+  vec4 sz0 = step(gz0, vec4(0.0));
+  gx0 -= sz0 * (step(0.0, gx0) - 0.5); gy0 -= sz0 * (step(0.0, gy0) - 0.5);
+  vec4 gx1 = ixy1 / 7.0; vec4 gy1 = fract(floor(gx1) / 7.0) - 0.5;
+  gx1 = fract(gx1); vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
+  vec4 sz1 = step(gz1, vec4(0.0));
+  gx1 -= sz1 * (step(0.0, gx1) - 0.5); gy1 -= sz1 * (step(0.0, gy1) - 0.5);
+  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x); vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);
+  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z); vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);
+  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x); vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);
+  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z); vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);
+  vec4 norm0 = taylorInvSqrt(vec4(dot(g000,g000),dot(g010,g010),dot(g100,g100),dot(g110,g110)));
+  g000 *= norm0.x; g010 *= norm0.y; g100 *= norm0.z; g110 *= norm0.w;
+  vec4 norm1 = taylorInvSqrt(vec4(dot(g001,g001),dot(g011,g011),dot(g101,g101),dot(g111,g111)));
+  g001 *= norm1.x; g011 *= norm1.y; g101 *= norm1.z; g111 *= norm1.w;
+  float n000 = dot(g000, Pf0); float n100 = dot(g100, vec3(Pf1.x,Pf0.yz));
+  float n010 = dot(g010, vec3(Pf0.x,Pf1.y,Pf0.z)); float n110 = dot(g110, vec3(Pf1.xy,Pf0.z));
+  float n001 = dot(g001, vec3(Pf0.xy,Pf1.z)); float n101 = dot(g101, vec3(Pf1.x,Pf0.y,Pf1.z));
+  float n011 = dot(g011, vec3(Pf0.x,Pf1.yz)); float n111 = dot(g111, Pf1);
+  vec3 fade_xyz = fade(Pf0);
+  vec4 n_z = mix(vec4(n000,n100,n010,n110),vec4(n001,n101,n011,n111),fade_xyz.z);
+  vec2 n_yz = mix(n_z.xy,n_z.zw,fade_xyz.y);
+  float n_xyz = mix(n_yz.x,n_yz.y,fade_xyz.x);
+  return 2.2 * n_xyz;
+}`;
+interface BeamsProps {
+    beamWidth?: number; beamHeight?: number; beamNumber?: number;
+    lightColor?: string; speed?: number; noiseIntensity?: number;
+    scale?: number; rotation?: number;
+}
+const Beams: FC<BeamsProps> = ({
+    beamWidth = 2, beamHeight = 15, beamNumber = 12,
+    lightColor = '#ffffff', speed = 2, noiseIntensity = 1.75,
+    scale = 0.2, rotation = 0
+}) => {
+    const meshRef = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>>(null!);
+    const beamMaterial = useMemo(() =>
+        extendMaterial(THREE.MeshStandardMaterial, {
+            header: `varying vec3 vEye; varying float vNoise; varying vec2 vUv; varying vec3 vPosition;
+        uniform float time; uniform float uSpeed; uniform float uNoiseIntensity; uniform float uScale; ${noise}`,
+            vertexHeader: `
+        float getPos(vec3 pos) {
+          vec3 noisePos = vec3(pos.x * 0., pos.y - uv.y, pos.z + time * uSpeed * 3.) * uScale;
+          return cnoise(noisePos);
+        }
+        vec3 getCurrentPos(vec3 pos) {
+          vec3 newpos = pos; newpos.z += getPos(pos); return newpos;
+        }
+        vec3 getNormal(vec3 pos) {
+          vec3 curpos = getCurrentPos(pos); vec3 nextposX = getCurrentPos(pos + vec3(0.01, 0.0, 0.0));
+          vec3 nextposZ = getCurrentPos(pos + vec3(0.0, -0.01, 0.0));
+          vec3 tangentX = normalize(nextposX - curpos); vec3 tangentZ = normalize(nextposZ - curpos);
+          return normalize(cross(tangentZ, tangentX));
+        }`,
+            vertex: {
+                '#include <begin_vertex>': `transformed.z += getPos(transformed.xyz);`,
+                '#include <beginnormal_vertex>': `objectNormal = getNormal(position.xyz);`
+            },
+            fragment: {
+                '#include <dithering_fragment>': `float randomNoise = noise(gl_FragCoord.xy); gl_FragColor.rgb -= randomNoise / 15. * uNoiseIntensity;`
+            },
+            material: { fog: true },
+            uniforms: {
+                diffuse: new THREE.Color(...hexToNormalizedRGB('#000000')), time: { shared: true, mixed: true, linked: true, value: 0 },
+                roughness: 0.3, metalness: 0.3, uSpeed: { shared: true, mixed: true, linked: true, value: speed },
+                envMapIntensity: 10, uNoiseIntensity: noiseIntensity, uScale: scale
+            }
+        }), [speed, noiseIntensity, scale]
+    );
+
+    return (
+        <CanvasWrapper>
+            <group rotation={[0, 0, degToRad(rotation)]}>
+                <MergedPlanes ref={meshRef} material={beamMaterial} count={beamNumber} width={beamWidth} height={beamHeight} />
+                <DirLight color={lightColor} position={[0, 3, 10]} />
+            </group>
+            <ambientLight intensity={1} />
+            <color attach="background" args={['#000000']} />
+            <PerspectiveCamera makeDefault position={[0, 0, 20]} fov={30} />
+        </CanvasWrapper>
+    );
+};
+function createStackedPlanesBufferGeometry(n: number, width: number, height: number, spacing: number, heightSegments: number): THREE.BufferGeometry {
+    const geometry = new THREE.BufferGeometry();
+    const numVertices = n * (heightSegments + 1) * 2; const numFaces = n * heightSegments * 2;
+    const positions = new Float32Array(numVertices * 3); const indices = new Uint32Array(numFaces * 3);
+    const uvs = new Float32Array(numVertices * 2);
+    let vertexOffset = 0, indexOffset = 0, uvOffset = 0;
+    const totalWidth = n * width + (n - 1) * spacing; const xOffsetBase = -totalWidth / 2;
+    for (let i = 0; i < n; i++) {
+        const xOffset = xOffsetBase + i * (width + spacing);
+        const uvXOffset = Math.random() * 300, uvYOffset = Math.random() * 300;
+        for (let j = 0; j <= heightSegments; j++) {
+            const y = height * (j / heightSegments - 0.5); const v0 = [xOffset, y, 0], v1 = [xOffset + width, y, 0];
+            positions.set([...v0, ...v1], vertexOffset * 3);
+            const uvY = j / heightSegments; uvs.set([uvXOffset, uvY + uvYOffset, uvXOffset + 1, uvY + uvYOffset], uvOffset);
+            if (j < heightSegments) {
+                const a = vertexOffset, b = vertexOffset + 1, c = vertexOffset + 2, d = vertexOffset + 3;
+                indices.set([a, b, c, c, b, d], indexOffset); indexOffset += 6;
+            }
+            vertexOffset += 2; uvOffset += 4;
+        }
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.computeVertexNormals();
+    return geometry;
+}
+const MergedPlanes = forwardRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>, { material: THREE.ShaderMaterial; width: number; count: number; height: number; }>
+    (({ material, width, count, height }, ref) => {
+        const mesh = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>>(null!);
+        useImperativeHandle(ref, () => mesh.current);
+        const geometry = useMemo(() => createStackedPlanesBufferGeometry(count, width, height, 0, 100), [count, width, height]);
+        useFrame((_, delta) => { mesh.current.material.uniforms.time.value += 0.1 * delta; });
+        return <mesh ref={mesh} geometry={geometry} material={material} />;
+    });
+MergedPlanes.displayName = 'MergedPlanes';
+const DirLight: FC<{ position: [number, number, number]; color: string }> = ({ position, color }) => {
+    const dir = useRef<THREE.DirectionalLight>(null!);
+    useEffect(() => {
+        if (!dir.current) return;
+        const cam = dir.current.shadow.camera as THREE.Camera & { top: number; bottom: number; left: number; right: number; far: number; };
+        cam.top = 24; cam.bottom = -24; cam.left = -24; cam.right = 24; cam.far = 64;
+        dir.current.shadow.bias = -0.004;
+    }, []);
+    return <directionalLight ref={dir} color={color} intensity={1} position={position} />;
+};
+
+export default Beams;
+--- END OF FILE src/components/bits/Beams.tsx ---
+
+--- START OF FILE src/components/bits/ClickSpark.tsx ---
+import React, { useRef, useEffect, useCallback } from 'react';
+
+interface Spark { x: number; y: number; angle: number; startTime: number; }
+
+export const ClickSpark: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const sparksRef = useRef<Spark[]>([]);
+    const sparkColor = '#fff'; const sparkSize = 2; const sparkRadius = 25;
+    const sparkCount = 12; const duration = 500;
+
+    // FIX: Explicitly define the type for `easing` to allow for all possible string values.
+    const easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out' = 'ease-out';
+
+    useEffect(() => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const parent = canvas.parentElement; if (!parent) return;
+        let resizeTimeout: NodeJS.Timeout;
+        const resizeCanvas = () => {
+            const { width, height } = parent.getBoundingClientRect();
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width; canvas.height = height;
+            }
+        };
+        const handleResize = () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(resizeCanvas, 100); };
+        const ro = new ResizeObserver(handleResize); ro.observe(parent);
+        resizeCanvas();
+        return () => { ro.disconnect(); clearTimeout(resizeTimeout); };
+    }, []);
+
+    const easeFunc = useCallback((t: number) => {
+        switch (easing as string) {
+            case 'ease-in': return t * t;
+            case 'ease-in-out': return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            case 'linear': return t;
+            case 'ease-out':
+            default: return t * (2 - t);
+        }
+    }, [easing]);
+
+    useEffect(() => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext('2d'); if (!ctx) return;
+        let animationId: number;
+        const draw = (timestamp: number) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            sparksRef.current = sparksRef.current.filter(spark => {
+                const elapsed = timestamp - spark.startTime;
+                if (elapsed >= duration) return false;
+                const progress = elapsed / duration; const eased = easeFunc(progress);
+                const distance = eased * sparkRadius;
+                const lineLength = sparkSize * (1 - eased);
+                const x1 = spark.x + distance * Math.cos(spark.angle); const y1 = spark.y + distance * Math.sin(spark.angle);
+                const x2 = spark.x + (distance + lineLength) * Math.cos(spark.angle); const y2 = spark.y + (distance + lineLength) * Math.sin(spark.angle);
+                ctx.strokeStyle = sparkColor; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                return true;
+            });
+            animationId = requestAnimationFrame(draw);
+        };
+        animationId = requestAnimationFrame(draw);
+        return () => cancelAnimationFrame(animationId);
+    }, [easeFunc]);
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+        const now = performance.now();
+        const newSparks: Spark[] = Array.from({ length: sparkCount }, (_, i) => ({ x, y, angle: (2 * Math.PI * i) / sparkCount, startTime: now }));
+        sparksRef.current.push(...newSparks);
+    };
+
+    return (
+        <div className="relative w-full h-full" onClick={handleClick}>
+            <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
+            {children}
+        </div>
+    );
+};
+--- END OF FILE src/components/bits/ClickSpark.tsx ---
+
+--- START OF FILE src/components/bits/Dock.tsx ---
+import { motion, MotionValue, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react';
+import React, { Children, cloneElement, useEffect, useRef, useState } from 'react';
+import { NavLink } from 'react-router-dom';
+
+export type DockItemData = {
+    id: string;
+    icon: React.ReactNode;
+    label: string;
+    path: string;
+};
+
+export type DockProps = {
+    items: DockItemData[];
+    className?: string;
+};
+
+type DockItemProps = {
+    children: React.ReactNode;
+    path: string;
+    mouseX: MotionValue<number>;
+};
+
+function DockItem({ children, path, mouseX }: DockItemProps) {
+    const ref = useRef<HTMLAnchorElement>(null);
+    const isHovered = useMotionValue(0);
+    const distance = useTransform(mouseX, val => {
+        const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
+        return val - bounds.x - bounds.width / 2;
+    });
+    const width = useTransform(distance, [-100, 0, 100], [50, 100, 50]);
+    const widthSync = useSpring(width, { mass: 0.1, stiffness: 150, damping: 12 });
+
+    return (
+        <motion.div onHoverStart={() => isHovered.set(1)} onHoverEnd={() => isHovered.set(0)} className="relative">
+            <NavLink ref={ref} to={path} className="aspect-square w-14 bg-zinc-900/80 rounded-full flex items-center justify-center border-2 border-white/10"
+                // FIX: Acknowledge the intentional use of `any` to satisfy the linter.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                style={{ width: widthSync as any }}>
+                {Children.map(children, child => React.isValidElement(child) ? cloneElement(child as React.ReactElement<{ isHovered?: MotionValue<number> }>, { isHovered }) : child)}
+            </NavLink>
+        </motion.div>
+    );
+}
+
+function DockLabel({ children, isHovered }: { children: React.ReactNode, isHovered?: MotionValue<number> }) {
+    const [isVisible, setIsVisible] = useState(false);
+    useEffect(() => {
+        if (!isHovered) return;
+        const unsubscribe = isHovered.on('change', latest => setIsVisible(latest === 1));
+        return () => unsubscribe();
+    }, [isHovered]);
+
+    return (
+        <AnimatePresence>
+            {isVisible && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                    className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-xs text-white border border-white/10"
+                >
+                    {children}
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
+function DockIcon({ children }: { children: React.ReactNode }) {
+    return <div className="flex items-center justify-center text-white">{children}</div>;
+}
+
+export default function Dock({ items, className = '' }: DockProps) {
+    const mouseX = useMotionValue(Infinity);
+    return (
+        <div onMouseMove={e => mouseX.set(e.pageX)} onMouseLeave={() => mouseX.set(Infinity)}
+            className={`${className} flex h-16 items-end gap-4 rounded-2xl bg-black/30 px-4 pb-3 border border-white/10 backdrop-blur-lg`}
+        >
+            {items.map((item) => (
+                <DockItem key={item.id} path={item.path} mouseX={mouseX}>
+                    <DockIcon>{item.icon}</DockIcon>
+                    <DockLabel>{item.label}</DockLabel>
+                </DockItem>
+            ))}
+        </div>
+    );
+}
+--- END OF FILE src/components/bits/Dock.tsx ---
+
+--- START OF FILE src/components/bits/ShinyText.tsx ---
+import React from 'react';
+
+interface ShinyTextProps {
+    text: string;
+    className?: string;
+}
+
+const ShinyText: React.FC<ShinyTextProps> = ({ text, className = '' }) => {
+    return (
+        <p className={`text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text animate-shine ${className}`}
+            style={{
+                backgroundImage: 'linear-gradient(120deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 1) 40%, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 80%)',
+                backgroundSize: '200% 100%',
+                WebkitBackgroundClip: 'text',
+            }}
+        >
+            {text}
+        </p>
+    );
+};
+
+export default ShinyText;
+--- END OF FILE src/components/bits/ShinyText.tsx ---
+
+--- START OF FILE src/components/bits/StaggeredMenu.tsx ---
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import { gsap } from 'gsap';
+
+export interface StaggeredMenuItem {
+    label: string;
+    ariaLabel: string;
+    link: string;
+}
+export interface StaggeredMenuSocialItem {
+    label: string;
+    link: string;
+}
+export interface StaggeredMenuProps {
+    position?: 'left' | 'right';
+    colors?: string[];
+    items?: StaggeredMenuItem[];
+    socialItems?: StaggeredMenuSocialItem[];
+    displaySocials?: boolean;
+    displayItemNumbering?: boolean;
+    className?: string;
+    logoUrl?: string;
+    menuButtonColor?: string;
+    openMenuButtonColor?: string;
+    accentColor?: string;
+    isFixed?: boolean;
+    changeMenuColorOnOpen?: boolean;
+    onMenuOpen?: () => void;
+    onMenuClose?: () => void;
+}
+
+export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
+    position = 'right',
+    colors = ['#1e1e22', '#35353c'],
+    items = [],
+    socialItems = [],
+    displaySocials = true,
+    displayItemNumbering = true,
+    className,
+    logoUrl,
+    menuButtonColor = '#fff',
+    openMenuButtonColor = '#fff',
+    changeMenuColorOnOpen = true,
+    accentColor = '#FAFAFA',
+    isFixed = false,
+    onMenuOpen,
+    onMenuClose
+}: StaggeredMenuProps) => {
+    const [open, setOpen] = useState(false);
+    const openRef = useRef(false);
+    const panelRef = useRef<HTMLDivElement | null>(null);
+    const preLayersRef = useRef<HTMLDivElement | null>(null);
+    const preLayerElsRef = useRef<HTMLElement[]>([]);
+    const plusHRef = useRef<HTMLSpanElement | null>(null);
+    const plusVRef = useRef<HTMLSpanElement | null>(null);
+    const iconRef = useRef<HTMLSpanElement | null>(null);
+    const textInnerRef = useRef<HTMLSpanElement | null>(null);
+    const [textLines, setTextLines] = useState<string[]>(['Menu', 'Close']);
+    const openTlRef = useRef<gsap.core.Timeline | null>(null);
+    const closeTweenRef = useRef<gsap.core.Tween | null>(null);
+    const spinTweenRef = useRef<gsap.core.Timeline | null>(null);
+    const textCycleAnimRef = useRef<gsap.core.Tween | null>(null);
+    const colorTweenRef = useRef<gsap.core.Tween | null>(null);
+    const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
+    const busyRef = useRef(false);
+    const itemEntranceTweenRef = useRef<gsap.core.Tween | null>(null);
+
+    useLayoutEffect(() => {
+        const ctx = gsap.context(() => {
+            const panel = panelRef.current; const preContainer = preLayersRef.current;
+            const plusH = plusHRef.current; const plusV = plusVRef.current;
+            const icon = iconRef.current; const textInner = textInnerRef.current;
+            if (!panel || !plusH || !plusV || !icon || !textInner) return;
+            let preLayers: HTMLElement[] = [];
+            if (preContainer) { preLayers = Array.from(preContainer.querySelectorAll('.sm-prelayer')) as HTMLElement[]; }
+            preLayerElsRef.current = preLayers;
+            const offscreen = position === 'left' ? -100 : 100;
+            gsap.set([panel, ...preLayers], { xPercent: offscreen });
+            gsap.set(plusH, { transformOrigin: '50% 50%', rotate: 0 });
+            gsap.set(plusV, { transformOrigin: '50% 50%', rotate: 90 });
+            gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
+            gsap.set(textInner, { yPercent: 0 });
+            if (toggleBtnRef.current) gsap.set(toggleBtnRef.current, { color: menuButtonColor });
+        });
+        return () => ctx.revert();
+    }, [menuButtonColor, position]);
+
+    const buildOpenTimeline = useCallback(() => {
+        const panel = panelRef.current; const layers = preLayerElsRef.current; if (!panel) return null;
+        openTlRef.current?.kill();
+        if (closeTweenRef.current) { closeTweenRef.current.kill(); closeTweenRef.current = null; }
+        itemEntranceTweenRef.current?.kill();
+        const itemEls = Array.from(panel.querySelectorAll('.sm-panel-itemLabel')) as HTMLElement[];
+        const numberEls = Array.from(panel.querySelectorAll('.sm-panel-list[data-numbering] .sm-panel-item')) as HTMLElement[];
+        const socialTitle = panel.querySelector('.sm-socials-title') as HTMLElement | null;
+        const socialLinks = Array.from(panel.querySelectorAll('.sm-socials-link')) as HTMLElement[];
+        const layerStates = layers.map(el => ({ el, start: Number(gsap.getProperty(el, 'xPercent')) }));
+        const panelStart = Number(gsap.getProperty(panel, 'xPercent'));
+        if (itemEls.length) gsap.set(itemEls, { yPercent: 140, rotate: 10 });
+        if (numberEls.length) gsap.set(numberEls, { ['--sm-num-opacity']: 0 });
+        if (socialTitle) gsap.set(socialTitle, { opacity: 0 });
+        if (socialLinks.length) gsap.set(socialLinks, { y: 25, opacity: 0 });
+        const tl = gsap.timeline({ paused: true });
+        layerStates.forEach((ls, i) => { tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.5, ease: 'power4.out' }, i * 0.07); });
+        const lastTime = layerStates.length ? (layerStates.length - 1) * 0.07 : 0;
+        const panelInsertTime = lastTime + (layerStates.length ? 0.08 : 0);
+        const panelDuration = 0.65;
+        tl.fromTo(panel, { xPercent: panelStart }, { xPercent: 0, duration: panelDuration, ease: 'power4.out' }, panelInsertTime);
+        if (itemEls.length) {
+            const itemsStart = panelInsertTime + panelDuration * 0.15;
+            tl.to(itemEls, { yPercent: 0, rotate: 0, duration: 1, ease: 'power4.out', stagger: { each: 0.1, from: 'start' } }, itemsStart);
+            if (numberEls.length) {
+                tl.to(numberEls, { duration: 0.6, ease: 'power2.out', ['--sm-num-opacity']: 1, stagger: { each: 0.08, from: 'start' } }, itemsStart + 0.1);
+            }
+        }
+        if (socialTitle || socialLinks.length) {
+            const socialsStart = panelInsertTime + panelDuration * 0.4;
+            if (socialTitle) tl.to(socialTitle, { opacity: 1, duration: 0.5, ease: 'power2.out' }, socialsStart);
+            if (socialLinks.length) {
+                tl.to(socialLinks, { y: 0, opacity: 1, duration: 0.55, ease: 'power3.out', stagger: { each: 0.08, from: 'start' }, onComplete: () => { gsap.set(socialLinks, { clearProps: 'opacity' }); } }, socialsStart + 0.04);
+            }
+        }
+        openTlRef.current = tl;
+        return tl;
+    }, []);
+
+    const playOpen = useCallback(() => {
+        if (busyRef.current) return; busyRef.current = true;
+        const tl = buildOpenTimeline();
+        if (tl) { tl.eventCallback('onComplete', () => { busyRef.current = false; }); tl.play(0); }
+        else { busyRef.current = false; }
+    }, [buildOpenTimeline]);
+
+    const playClose = useCallback(() => {
+        openTlRef.current?.kill(); openTlRef.current = null; itemEntranceTweenRef.current?.kill();
+        const panel = panelRef.current; const layers = preLayerElsRef.current; if (!panel) return;
+        const all: HTMLElement[] = [...layers, panel]; closeTweenRef.current?.kill();
+        const offscreen = position === 'left' ? -100 : 100;
+        closeTweenRef.current = gsap.to(all, {
+            xPercent: offscreen, duration: 0.32, ease: 'power3.in', overwrite: 'auto', onComplete: () => {
+                const itemEls = Array.from(panel.querySelectorAll('.sm-panel-itemLabel')) as HTMLElement[];
+                if (itemEls.length) gsap.set(itemEls, { yPercent: 140, rotate: 10 });
+                const numberEls = Array.from(panel.querySelectorAll('.sm-panel-list[data-numbering] .sm-panel-item')) as HTMLElement[];
+                if (numberEls.length) gsap.set(numberEls, { ['--sm-num-opacity']: 0 });
+                const socialTitle = panel.querySelector('.sm-socials-title') as HTMLElement | null;
+                const socialLinks = Array.from(panel.querySelectorAll('.sm-socials-link')) as HTMLElement[];
+                if (socialTitle) gsap.set(socialTitle, { opacity: 0 });
+                if (socialLinks.length) gsap.set(socialLinks, { y: 25, opacity: 0 });
+                busyRef.current = false;
+            }
+        });
+    }, [position]);
+
+    const animateIcon = useCallback((opening: boolean) => {
+        const icon = iconRef.current; const h = plusHRef.current; const v = plusVRef.current; if (!icon || !h || !v) return;
+        spinTweenRef.current?.kill();
+        if (opening) {
+            gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
+            spinTweenRef.current = gsap.timeline({ defaults: { ease: 'power4.out' } }).to(h, { rotate: 45, duration: 0.5 }, 0).to(v, { rotate: -45, duration: 0.5 }, 0);
+        } else {
+            spinTweenRef.current = gsap.timeline({ defaults: { ease: 'power3.inOut' } }).to(h, { rotate: 0, duration: 0.35 }, 0).to(v, { rotate: 90, duration: 0.35 }, 0).to(icon, { rotate: 0, duration: 0.001 }, 0);
+        }
+    }, []);
+
+    const animateColor = useCallback((opening: boolean) => {
+        const btn = toggleBtnRef.current; if (!btn) return; colorTweenRef.current?.kill();
+        if (changeMenuColorOnOpen) {
+            const targetColor = opening ? openMenuButtonColor : menuButtonColor;
+            colorTweenRef.current = gsap.to(btn, { color: targetColor, delay: 0.18, duration: 0.3, ease: 'power2.out' });
+        } else { gsap.set(btn, { color: menuButtonColor }); }
+    }, [openMenuButtonColor, menuButtonColor, changeMenuColorOnOpen]);
+
+    React.useEffect(() => {
+        if (toggleBtnRef.current) {
+            if (changeMenuColorOnOpen) {
+                const targetColor = openRef.current ? openMenuButtonColor : menuButtonColor;
+                gsap.set(toggleBtnRef.current, { color: targetColor });
+            } else { gsap.set(toggleBtnRef.current, { color: menuButtonColor }); }
+        }
+    }, [changeMenuColorOnOpen, menuButtonColor, openMenuButtonColor]);
+
+    const animateText = useCallback((opening: boolean) => {
+        const inner = textInnerRef.current; if (!inner) return;
+        textCycleAnimRef.current?.kill();
+        const targetLabel = opening ? 'Close' : 'Menu'; setTextLines(['Menu', 'Close']);
+        gsap.set(inner, { yPercent: targetLabel === 'Close' ? 0 : -50 });
+        textCycleAnimRef.current = gsap.to(inner, { yPercent: targetLabel === 'Close' ? -50 : 0, duration: 0.5, ease: 'power4.out' });
+    }, []);
+
+    const toggleMenu = useCallback(() => {
+        const target = !openRef.current; openRef.current = target; setOpen(target);
+        if (target) { onMenuOpen?.(); playOpen(); } else { onMenuClose?.(); playClose(); }
+        animateIcon(target); animateColor(target); animateText(target);
+    }, [playOpen, playClose, animateIcon, animateColor, animateText, onMenuOpen, onMenuClose]);
+
+    // FIX: Allow pointer events only when the menu is open
+    const wrapperStyle: React.CSSProperties = { pointerEvents: open ? 'auto' : 'none' };
+    if (isFixed) {
+        Object.assign(wrapperStyle, { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' });
+    } else {
+        Object.assign(wrapperStyle, { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' });
+    }
+
+    return (
+        <div className="sm-scope z-50" style={wrapperStyle}>
+            <div className={(className ? className + ' ' : '') + 'staggered-menu-wrapper relative w-full h-full z-40'} style={accentColor ? ({ ['--sm-accent']: accentColor } as React.CSSProperties) : undefined} data-position={position} data-open={open || undefined}>
+                <div ref={preLayersRef} className="sm-prelayers absolute top-0 right-0 bottom-0 pointer-events-none z-[5]" aria-hidden="true">
+                    {(() => {
+                        // FIX: Ensure accentColor is part of the layers for the staggered effect
+                        const baseColors = colors && colors.length ? colors.slice(0, 3) : ['#1e1e22', '#35353c'];
+                        const allColors = accentColor ? [accentColor, ...baseColors] : baseColors;
+                        return allColors.map((c, i) => (<div key={i} className="sm-prelayer absolute top-0 right-0 h-full w-full translate-x-0" style={{ background: c }} />));
+                    })()}
+                </div>
+                <header className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
+                    <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
+                        {logoUrl && <img src={logoUrl} alt="Logo" className="sm-logo-img block h-8 w-auto object-contain" draggable={false} width={110} height={24} />}
+                    </div>
+                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 cursor-pointer font-medium leading-none overflow-visible pointer-events-auto" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} aria-controls="staggered-menu-panel" onClick={toggleMenu} type="button">
+                        <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em]" aria-hidden="true">
+                            <span ref={textInnerRef} className="sm-toggle-textInner flex flex-col leading-none">
+                                {textLines.map((l, i) => (<span className="sm-toggle-line block h-[1em] leading-none" key={i}>{l}</span>))}
+                            </span>
+                        </span>
+                        <span ref={iconRef} className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform]" aria-hidden="true">
+                            <span ref={plusHRef} className="sm-icon-line absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]" />
+                            <span ref={plusVRef} className="sm-icon-line sm-icon-line-v absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]" />
+                        </span>
+                    </button>
+                </header>
+                <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel absolute top-0 right-0 h-full bg-zinc-950/95 flex flex-col p-[6em_2em_2em_2em] overflow-y-auto z-10 backdrop-blur-xl" aria-hidden={!open}>
+                    <div className="sm-panel-inner flex-1 flex flex-col gap-5">
+                        <ul className="sm-panel-list list-none m-0 p-0 flex flex-col gap-2" role="list" data-numbering={displayItemNumbering || undefined}>
+                            {items && items.length > 0 ? (
+                                items.map((it, idx) => (
+                                    <li className="sm-panel-itemWrap relative overflow-hidden leading-none" key={it.label + idx}>
+                                        <NavLink className="sm-panel-item" to={it.link} aria-label={it.ariaLabel} data-index={idx + 1} onClick={toggleMenu}>
+                                            <span className="sm-panel-itemLabel inline-block [transform-origin:50%_100%] will-change-transform">{it.label}</span>
+                                        </NavLink>
+                                    </li>
+                                ))
+                            ) : (<li className="sm-panel-itemWrap relative overflow-hidden leading-none" aria-hidden="true"><span className="sm-panel-item"><span className="sm-panel-itemLabel">No items</span></span></li>)}
+                        </ul>
+                        {displaySocials && socialItems && socialItems.length > 0 && (
+                            <div className="sm-socials mt-auto pt-8 flex flex-col gap-3" aria-label="Social links">
+                                <h3 className="sm-socials-title">Socials</h3>
+                                <ul className="sm-socials-list list-none m-0 p-0 flex flex-row items-center gap-4 flex-wrap" role="list">
+                                    {socialItems.map((s, i) => (<li key={s.label + i} className="sm-socials-item"><a href={s.link} target="_blank" rel="noopener noreferrer" className="sm-socials-link">{s.label}</a></li>))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </aside>
+            </div>
+            <style>{`.sm-scope .sm-panel-item { position: relative; color: #a1a1aa; font-weight: 600; font-size: 4rem; cursor: pointer; line-height: 1; letter-spacing: -2px; text-transform: uppercase; transition: background 0.25s, color 0.25s; display: inline-block; text-decoration: none; padding-right: 1.4em; } .sm-scope .sm-panel-item:hover { color: var(--sm-accent, #FAFAFA); } .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; } .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.1em; right: 0; font-size: 18px; font-weight: 400; color: var(--sm-accent, #FAFAFA); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); } @media (max-width: 640px) { .sm-scope .sm-panel-item {font-size: 3rem;} } .sm-socials-title { margin: 0; font-size: 1rem; font-weight: 500; color: var(--sm-accent, #FAFAFA); } .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #a1a1aa; text-decoration: none; position: relative; padding: 2px 0; display: inline-block; transition: color 0.3s ease, opacity 0.3s ease; }`}</style>
+        </div>
+    );
+};
+export default StaggeredMenu;
+--- END OF FILE src/components/bits/StaggeredMenu.tsx ---
+
+--- START OF FILE src/components/ui/button.tsx ---
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        outline:
+          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        icon: "size-9",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant,
+  size,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : "button"
+
+  return (
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+
+--- END OF FILE src/components/ui/button.tsx ---
+
+--- START OF FILE src/components/ui/card.tsx ---
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Card({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card"
+      className={cn(
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn("leading-none font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-6", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+}
+
+--- END OF FILE src/components/ui/card.tsx ---
+
+--- START OF FILE src/components/ui/input.tsx ---
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(
+        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Input }
+
+--- END OF FILE src/components/ui/input.tsx ---
+
+--- START OF FILE src/components/ui/label.tsx ---
+"use client"
+
+import * as React from "react"
+import * as LabelPrimitive from "@radix-ui/react-label"
+
+import { cn } from "@/lib/utils"
+
+function Label({
+  className,
+  ...props
+}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+  return (
+    <LabelPrimitive.Root
+      data-slot="label"
+      className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Label }
+
+--- END OF FILE src/components/ui/label.tsx ---
+
+--- START OF FILE src/components/ui/select.tsx ---
+"use client"
+
+import * as React from "react"
+import * as SelectPrimitive from "@radix-ui/react-select"
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+function Select({
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  return <SelectPrimitive.Root data-slot="select" {...props} />
+}
+
+function SelectGroup({
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Group>) {
+  return <SelectPrimitive.Group data-slot="select-group" {...props} />
+}
+
+function SelectValue({
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Value>) {
+  return <SelectPrimitive.Value data-slot="select-value" {...props} />
+}
+
+function SelectTrigger({
+  className,
+  size = "default",
+  children,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
+  size?: "sm" | "default"
+}) {
+  return (
+    <SelectPrimitive.Trigger
+      data-slot="select-trigger"
+      data-size={size}
+      className={cn(
+        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDownIcon className="size-4 opacity-50" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  )
+}
+
+function SelectContent({
+  className,
+  children,
+  position = "popper",
+  align = "center",
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        data-slot="select-content"
+        className={cn(
+          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md",
+          position === "popper" &&
+            "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+          className
+        )}
+        position={position}
+        align={align}
+        {...props}
+      >
+        <SelectScrollUpButton />
+        <SelectPrimitive.Viewport
+          className={cn(
+            "p-1",
+            position === "popper" &&
+              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
+          )}
+        >
+          {children}
+        </SelectPrimitive.Viewport>
+        <SelectScrollDownButton />
+      </SelectPrimitive.Content>
+    </SelectPrimitive.Portal>
+  )
+}
+
+function SelectLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Label>) {
+  return (
+    <SelectPrimitive.Label
+      data-slot="select-label"
+      className={cn("text-muted-foreground px-2 py-1.5 text-xs", className)}
+      {...props}
+    />
+  )
+}
+
+function SelectItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+  return (
+    <SelectPrimitive.Item
+      data-slot="select-item"
+      className={cn(
+        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        className
+      )}
+      {...props}
+    >
+      <span className="absolute right-2 flex size-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <CheckIcon className="size-4" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  )
+}
+
+function SelectSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Separator>) {
+  return (
+    <SelectPrimitive.Separator
+      data-slot="select-separator"
+      className={cn("bg-border pointer-events-none -mx-1 my-1 h-px", className)}
+      {...props}
+    />
+  )
+}
+
+function SelectScrollUpButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
+  return (
+    <SelectPrimitive.ScrollUpButton
+      data-slot="select-scroll-up-button"
+      className={cn(
+        "flex cursor-default items-center justify-center py-1",
+        className
+      )}
+      {...props}
+    >
+      <ChevronUpIcon className="size-4" />
+    </SelectPrimitive.ScrollUpButton>
+  )
+}
+
+function SelectScrollDownButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
+  return (
+    <SelectPrimitive.ScrollDownButton
+      data-slot="select-scroll-down-button"
+      className={cn(
+        "flex cursor-default items-center justify-center py-1",
+        className
+      )}
+      {...props}
+    >
+      <ChevronDownIcon className="size-4" />
+    </SelectPrimitive.ScrollDownButton>
+  )
+}
+
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+}
+
+--- END OF FILE src/components/ui/select.tsx ---
+
+--- START OF FILE src/components/ui/separator.tsx ---
+import * as React from "react"
+import * as SeparatorPrimitive from "@radix-ui/react-separator"
+
+import { cn } from "@/lib/utils"
+
+function Separator({
+  className,
+  orientation = "horizontal",
+  decorative = true,
+  ...props
+}: React.ComponentProps<typeof SeparatorPrimitive.Root>) {
+  return (
+    <SeparatorPrimitive.Root
+      data-slot="separator"
+      decorative={decorative}
+      orientation={orientation}
+      className={cn(
+        "bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Separator }
+
+--- END OF FILE src/components/ui/separator.tsx ---
+
+--- START OF FILE src/components/ui/sheet.tsx ---
+import * as React from "react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import { XIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+}
+
+function SheetTrigger({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
+}
+
+function SheetClose({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Close>) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+}
+
+function SheetPortal({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+}
+
+function SheetOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+  return (
+    <SheetPrimitive.Overlay
+      data-slot="sheet-overlay"
+      className={cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function SheetContent({
+  className,
+  children,
+  side = "right",
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Content> & {
+  side?: "top" | "right" | "bottom" | "left"
+}) {
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        data-slot="sheet-content"
+        className={cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+          side === "right" &&
+            "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
+          side === "left" &&
+            "data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
+          side === "top" &&
+            "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
+          side === "bottom" &&
+            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+          <XIcon className="size-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  )
+}
+
+function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-header"
+      className={cn("flex flex-col gap-1.5 p-4", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-footer"
+      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Title>) {
+  return (
+    <SheetPrimitive.Title
+      data-slot="sheet-title"
+      className={cn("text-foreground font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Description>) {
+  return (
+    <SheetPrimitive.Description
+      data-slot="sheet-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Sheet,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
+
+--- END OF FILE src/components/ui/sheet.tsx ---
+
+--- START OF FILE src/components/ui/slider.tsx ---
+import * as React from "react"
+import * as SliderPrimitive from "@radix-ui/react-slider"
+
+import { cn } from "@/lib/utils"
+
+function Slider({
+  className,
+  defaultValue,
+  value,
+  min = 0,
+  max = 100,
+  ...props
+}: React.ComponentProps<typeof SliderPrimitive.Root>) {
+  const _values = React.useMemo(
+    () =>
+      Array.isArray(value)
+        ? value
+        : Array.isArray(defaultValue)
+          ? defaultValue
+          : [min, max],
+    [value, defaultValue, min, max]
+  )
+
+  return (
+    <SliderPrimitive.Root
+      data-slot="slider"
+      defaultValue={defaultValue}
+      value={value}
+      min={min}
+      max={max}
+      className={cn(
+        "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
+        className
+      )}
+      {...props}
+    >
+      <SliderPrimitive.Track
+        data-slot="slider-track"
+        className={cn(
+          "bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5"
+        )}
+      >
+        <SliderPrimitive.Range
+          data-slot="slider-range"
+          className={cn(
+            "bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full"
+          )}
+        />
+      </SliderPrimitive.Track>
+      {Array.from({ length: _values.length }, (_, index) => (
+        <SliderPrimitive.Thumb
+          data-slot="slider-thumb"
+          key={index}
+          className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
+        />
+      ))}
+    </SliderPrimitive.Root>
+  )
+}
+
+export { Slider }
+
+--- END OF FILE src/components/ui/slider.tsx ---
+
+--- START OF FILE src/components/ui/textarea.tsx ---
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+  return (
+    <textarea
+      data-slot="textarea"
+      className={cn(
+        "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Textarea }
+
+--- END OF FILE src/components/ui/textarea.tsx ---
+
+--- START OF FILE src/lib/utils.ts ---
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+--- END OF FILE src/lib/utils.ts ---
+
+--- START OF FILE src/pages/HomePage.tsx ---
+import { tools } from '@/tools';
+import Dock, { DockItemData } from '@/components/bits/Dock';
+import ShinyText from '@/components/bits/ShinyText';
+
+export const HomePage = () => {
+    const dockItems: DockItemData[] = tools.map(tool => ({
+        id: tool.path,
+        label: tool.name,
+        icon: <span className="font-bold text-xl">{tool.name.charAt(0)}</span>,
+        path: tool.path,
+    }));
+
+    return (
+        <div className="container mx-auto h-full flex flex-col items-center justify-center text-center min-h-[calc(100vh-10rem)]">
+            <div className="mb-20">
+                <ShinyText text="Essential Online Tools" />
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
+                    A collection of free and simple web utilities for everyday tasks.
+                </p>
+            </div>
+
+            <Dock items={dockItems} />
+        </div>
+    );
+};
+--- END OF FILE src/pages/HomePage.tsx ---
+
+--- START OF FILE src/pages/tools/PlaceholderTool.tsx ---
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Wrench } from "lucide-react";
+
+interface PlaceholderToolProps {
+    toolName: string;
+}
+
+export const PlaceholderTool = ({ toolName }: PlaceholderToolProps) => {
+    return (
+        <div className="flex items-center justify-center h-full">
+            <Card className="bg-card/60 border-white/10 backdrop-blur-xl text-center p-8 w-full max-w-lg">
+                <CardHeader>
+                    <div className="flex justify-center mb-4">
+                        <Wrench className="h-12 w-12 text-primary" />
+                    </div>
+                    <CardTitle className="text-3xl font-bold">{toolName}</CardTitle>
+                    <CardDescription className="text-lg text-muted-foreground mt-2">
+                        This tool is currently under construction. Please check back later!
+                    </CardDescription>
+                </CardHeader>
+            </Card>
+        </div>
+    );
+};
+--- END OF FILE src/pages/tools/PlaceholderTool.tsx ---
+
+--- START OF FILE src/pages/tools/QRCodeGenerator.tsx ---
+import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+
+type Level = 'L' | 'M' | 'Q' | 'H';
+
+// --- Type Definitions for Component Props ---
+interface QrCodeOptions {
+    value: string;
+    size: number;
+    fgColor: string;
+    bgColor: string;
+    level: Level;
+    imageSettings?: {
+        src: string;
+        height: number;
+        width: number;
+        excavate: boolean;
+    };
+}
+interface QrCodePreviewProps {
+    qrRef: RefObject<HTMLDivElement | null>;
+    options: QrCodeOptions;
+    size: number;
+    onSizeChange: (size: number) => void;
+    onDownload: (format: 'png' | 'jpeg') => void;
+    className?: string;
+}
+interface QrCodeControlsProps {
+    text: string;
+    onTextChange: (value: string) => void;
+    level: Level;
+    onLevelChange: (value: string) => void;
+    fgColor: string;
+    onFgColorChange: (value: string) => void;
+    bgColor: string;
+    onBgColorChange: (value: string) => void;
+    onImageUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+    logoUrl: string;
+    onLogoUrlChange: (value: string) => void;
+    onRemoveLogo: () => void;
+    finalLogoSrc: string;
+    className?: string;
+}
+
+// --- Custom Hook ---
+const useDebounce = <T,>(value: T, delay: number): T => {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+};
+
+// --- Sub-Components with Typed Props ---
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, className }) => (
+    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8", className)}>
+        <div className="flex-grow w-full flex items-center justify-center min-h-0">
+            <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
+                <QRCodeCanvas {...options} style={{ width: '100%', height: '100%' }} />
+            </div>
+        </div>
+        <div className="w-full max-w-xs mt-8 flex-shrink-0">
+            <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
+            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={1024} step={8} />
+        </div>
+        <div className="mt-6 flex items-center gap-4 flex-shrink-0">
+            <Button onClick={() => onDownload('png')} disabled={!options.value}>
+                <Download className="mr-2 h-4 w-4" /> Download PNG
+            </Button>
+            <Button variant="secondary" onClick={() => onDownload('jpeg')} disabled={!options.value}>
+                Download JPG
+            </Button>
+        </div>
+    </Card>
+);
+
+const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
+    <div className={cn("lg:col-span-1 space-y-6", className)}>
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Textarea value={text} onChange={e => onTextChange(e.target.value)} placeholder="Enter text or URL" className="h-28" />
+                <Separator className="my-4" />
+                <Label className="mb-2 block">Error Correction</Label>
+                <Select value={level} onValueChange={onLevelChange}>
+                    <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="L">Low</SelectItem>
+                        <SelectItem value="M">Medium</SelectItem>
+                        <SelectItem value="Q">Quartile</SelectItem>
+                        <SelectItem value="H">High</SelectItem>
+                    </SelectContent>
+                </Select>
+            </CardContent>
+        </Card>
+
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Palette size={18} /> Style</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="fgColor" className="mb-2 block">Foreground</Label>
+                    <Input id="fgColor" type="color" value={fgColor} onChange={e => onFgColorChange(e.target.value)} className="p-1 h-12" />
+                </div>
+                <div>
+                    <Label htmlFor="bgColor" className="mb-2 block">Background</Label>
+                    <Input id="bgColor" type="color" value={bgColor} onChange={e => onBgColorChange(e.target.value)} className="p-1 h-12" />
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ImageIcon size={18} /> Logo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Button asChild variant="outline" className="w-full">
+                    <Label htmlFor="logoFile" className="cursor-pointer">
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Upload an Image
+                    </Label>
+                </Button>
+                <Input id="logoFile" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={onImageUpload} className="hidden" />
+
+                <div className="relative flex justify-center">
+                    <Separator className="absolute top-1/2 -translate-y-1/2 w-full" />
+                    <span className="text-xs text-muted-foreground bg-card px-2 relative z-10">OR</span>
+                </div>
+                <div>
+                    <Label htmlFor="logoUrl" className="mb-2 block text-sm">Paste Image URL</Label>
+                    <div className="relative">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input id="logoUrl" type="url" placeholder="https://example.com/logo.png" value={logoUrl} onChange={e => onLogoUrlChange(e.target.value)} className="pl-9" />
+                    </div>
+                </div>
+
+                {finalLogoSrc && (
+                    <div className="pt-2 space-y-3">
+                        <Separator />
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <img src={finalLogoSrc} alt="Logo Preview" className="h-12 w-12 rounded-md border object-contain p-1 flex-shrink-0" />
+                                <p className="text-sm font-medium text-foreground truncate">Logo Preview</p>
+                            </div>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive flex-shrink-0" onClick={onRemoveLogo}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    </div>
+);
+
+
+// --- Main Component ---
+export const QRCodeGenerator = () => {
+    const [text, setText] = useState('Your text or URL goes here');
+    const [size, setSize] = useState(256);
+    const [fgColor, setFgColor] = useState('#000000');
+    const [bgColor, setBgColor] = useState('#ffffff');
+    const [level, setLevel] = useState<Level>('M');
+    const [logoImage, setLogoImage] = useState<string | null>(null);
+    const [logoUrl, setLogoUrl] = useState<string>('');
+    const debouncedText = useDebounce(text, 500);
+    const debouncedLogoUrl = useDebounce(logoUrl, 500);
+    const qrRef = useRef<HTMLDivElement>(null);
+    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoImage(reader.result as string);
+                setLogoUrl('');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    const handleLogoUrlChange = (value: string) => {
+        setLogoUrl(value);
+        if (value) {
+            setLogoImage(null);
+        }
+    };
+    const removeLogo = () => {
+        setLogoImage(null);
+        setLogoUrl('');
+        const fileInput = document.getElementById('logoFile') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
+    const handleDownload = (format: 'png' | 'jpeg') => {
+        const canvas = qrRef.current?.querySelector('canvas');
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = `qrcode.${format}`;
+            link.href = canvas.toDataURL(`image/${format}`, 1.0);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+    const finalLogoSrc = logoImage || debouncedLogoUrl;
+    const qrOptions: QrCodeOptions = {
+        value: debouncedText,
+        size: size,
+        fgColor: fgColor,
+        bgColor: bgColor,
+        level: level,
+        imageSettings: finalLogoSrc ? {
+            src: finalLogoSrc,
+            height: size * 0.2,
+            width: size * 0.2,
+            excavate: true,
+        } : undefined,
+    };
+    return (
+        <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-foreground tracking-tight">
+                QR Code Generator
+            </h2>
+            {/* Key Change: `items-start` is now prefixed with `lg:`, so it only applies on desktop. */}
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-start">
+                <QrCodeControls
+                    className="order-2 lg:order-1"
+                    text={text} onTextChange={setText}
+                    level={level} onLevelChange={(value) => setLevel(value as Level)}
+                    fgColor={fgColor} onFgColorChange={setFgColor}
+                    bgColor={bgColor} onBgColorChange={setBgColor}
+                    onImageUpload={handleImageUpload}
+                    logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
+                    onRemoveLogo={removeLogo}
+                    finalLogoSrc={finalLogoSrc}
+                />
+                <QrCodePreview
+                    className="order-1 lg:order-2"
+                    qrRef={qrRef}
+                    options={qrOptions}
+                    size={size}
+                    onSizeChange={setSize}
+                    onDownload={handleDownload}
+                />
+            </div>
+        </div>
+    );
+};
+--- END OF FILE src/pages/tools/QRCodeGenerator.tsx ---

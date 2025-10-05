@@ -10,6 +10,11 @@
 	100% { transform: translate(0px, 0px) scale(1); }
 }
 
+@keyframes shine {
+  from { background-position: 100%; }
+  to { background-position: -100%; }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -48,6 +53,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: "Inter", system-ui, sans-serif;
   --animate-blob: blob 7s infinite;
+  --animate-shine: shine 5s linear infinite;
 }
 
 :root {
