@@ -76,7 +76,7 @@ export const Layout = () => {
     ) : null;
 
     return (
-        <div className="h-screen font-sans antialiased relative">
+        <div className="h-dvh font-sans antialiased relative">
             <ClickSpark>
                 {isHomePage && showBeams && (
                     <div
