@@ -2,6 +2,7 @@ import React from 'react';
 import { QRCodeGenerator } from '@/pages/tools/QRCodeGenerator';
 import { PlaceholderTool } from '@/pages/tools/PlaceholderTool';
 import { Base64Tool } from '@/pages/tools/Base64Tool';
+import { JsonFormatterTool } from '@/pages/tools/JsonFormatterTool';
 
 export interface Tool {
     name: string;
@@ -33,7 +34,7 @@ export const tools: Tool[] = [
         name: 'JSON Formatter',
         description: 'Beautify and validate your JSON data.',
         path: '/tools/json-formatter',
-        component: createPlaceholder('JSON Formatter'),
+        component: JsonFormatterTool,
     },
     {
         name: 'Color Converter',
