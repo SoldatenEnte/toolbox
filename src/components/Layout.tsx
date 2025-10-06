@@ -16,24 +16,16 @@ export const Layout = () => {
     const isHomePage = location.pathname === '/';
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const mousePosition = useRef({ x: 0, y: 0 });
-    const [showBeams, setShowBeams] = useState(isHomePage);
-    const isInitialMount = useRef(true);
+    const [beamsOpacity, setBeamsOpacity] = useState(0);
 
     useEffect(() => {
         if (isHomePage) {
-            if (isInitialMount.current) {
-                setShowBeams(false);
-                isInitialMount.current = false;
-            } else {
-                setShowBeams(false);
-            }
-
             const timer = setTimeout(() => {
-                setShowBeams(true);
+                setBeamsOpacity(1);
             }, 100);
             return () => clearTimeout(timer);
         } else {
-            setShowBeams(false);
+            setBeamsOpacity(0);
         }
     }, [isHomePage]);
 
@@ -78,10 +70,10 @@ export const Layout = () => {
     return (
         <div className="h-dvh font-sans antialiased relative">
             <ClickSpark>
-                {isHomePage && showBeams && (
+                {isHomePage && (
                     <div
                         className="absolute inset-0 -z-10 transition-opacity duration-[2000ms] ease-in-out"
-                        style={{ opacity: 1 }}
+                        style={{ opacity: beamsOpacity }}
                     >
                         <Beams
                             beamWidth={3}
