@@ -12,14 +12,14 @@ export const ClickSpark: React.FC<{ children?: React.ReactNode }> = ({ children 
     useEffect(() => {
         const canvas = canvasRef.current; if (!canvas) return;
         const parent = canvas.parentElement; if (!parent) return;
-        let resizeTimeout: NodeJS.Timeout;
+        let resizeTimeout: number;
         const resizeCanvas = () => {
             const { width, height } = parent.getBoundingClientRect();
             if (canvas.width !== width || canvas.height !== height) {
                 canvas.width = width; canvas.height = height;
             }
         };
-        const handleResize = () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(resizeCanvas, 100); };
+        const handleResize = () => { clearTimeout(resizeTimeout); resizeTimeout = window.setTimeout(resizeCanvas, 100); };
         const ro = new ResizeObserver(handleResize); ro.observe(parent);
         resizeCanvas();
         return () => { ro.disconnect(); clearTimeout(resizeTimeout); };
