@@ -435,22 +435,13 @@ export const QRCodeGenerator = () => {
                     style={{ opacity: showBackground ? 1 : 0 }}
                 >
                     <PixelBlast
-                        variant="circle"
-                        pixelSize={6}
-                        color="#B19EEF"
-                        patternScale={3}
-                        patternDensity={1.2}
-                        pixelSizeJitter={0.5}
-                        enableRipples
-                        rippleSpeed={0.4}
-                        rippleThickness={0.12}
-                        rippleIntensityScale={1.5}
-                        liquid
-                        liquidStrength={0.12}
-                        liquidRadius={1.2}
-                        liquidWobbleSpeed={5}
-                        speed={0.6}
-                        edgeFade={0.25}
+                        variant="square"
+                        pixelSize={5}
+                        color="#a1a1aa"
+                        patternScale={2.5}
+                        patternDensity={0.8}
+                        speed={0.4}
+                        edgeFade={0.15}
                         transparent
                     />
                 </div>
