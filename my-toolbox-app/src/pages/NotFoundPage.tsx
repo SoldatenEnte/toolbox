@@ -12,7 +12,7 @@ export const NotFoundPage = () => {
                 <Silk
                     speed={5}
                     scale={1}
-                    color="#27272a"
+                    color="#1b1b1bff"
                     noiseIntensity={1.2}
                     rotation={0.1}
                 />
@@ -26,16 +26,15 @@ export const NotFoundPage = () => {
             >
                 404
             </FuzzyText>
-
             <div className={cn(
-                "mt-5 ml-4 transition-opacity duration-500",
+                "mt-3 ml-25 -rotate-6 transition-opacity duration-500",
                 isChewyLoaded ? "opacity-100" : "opacity-0"
             )}>
                 <FuzzyText
                     baseIntensity={0.15}
                     hoverIntensity={0.4}
                     enableHover={true}
-                    fontSize="clamp(2rem, 5vw, 5rem)"
+                    fontSize="clamp(1rem, 3vw, 3rem)"
                     fontWeight="400"
                     fontFamily='"Chewy", cursive'
                 >
