@@ -1,9 +1,10 @@
 import * as React from 'react';
+import { motion, MotionProps } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 const BlurryButton = React.forwardRef<
     HTMLButtonElement,
-    React.ButtonHTMLAttributes<HTMLButtonElement>
+    React.ButtonHTMLAttributes<HTMLButtonElement> & MotionProps
 >(({ className, children, ...props }, ref) => {
     const internalRef = React.useRef<HTMLButtonElement>(null);
 
@@ -22,7 +23,7 @@ const BlurryButton = React.forwardRef<
     };
 
     return (
-        <button
+        <motion.button
             className={cn(
                 // Base styles
                 'relative inline-flex items-center justify-center whitespace-nowrap rounded-full px-8 py-2 text-base font-medium text-foreground transition-colors overflow-hidden',
@@ -52,7 +53,7 @@ const BlurryButton = React.forwardRef<
             {...props}
         >
             {children}
-        </button>
+        </motion.button>
     );
 });
 BlurryButton.displayName = 'BlurryButton';

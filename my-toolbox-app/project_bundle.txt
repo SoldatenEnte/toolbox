@@ -9,10 +9,13 @@ my-toolbox-app/
 │   ├── components/
 │   │   ├── bits/
 │   │   │   ├── Beams.tsx
+│   │   │   ├── CircularText.tsx
 │   │   │   ├── ClickSpark.tsx
 │   │   │   ├── Dock.tsx
+│   │   │   ├── FuzzyText.tsx
 │   │   │   ├── PixelBlast.tsx
 │   │   │   ├── ShinyText.tsx
+│   │   │   ├── Silk.tsx
 │   │   │   ├── StaggeredMenu.tsx
 │   │   │   └── TargetCursor.tsx
 │   │   ├── ui/
@@ -21,6 +24,7 @@ my-toolbox-app/
 │   │   │   ├── card.tsx
 │   │   │   ├── color-picker.tsx
 │   │   │   ├── dialog.tsx
+│   │   │   ├── download-button.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── label.tsx
 │   │   │   ├── popover.tsx
@@ -29,16 +33,19 @@ my-toolbox-app/
 │   │   │   ├── sheet.tsx
 │   │   │   ├── slider.tsx
 │   │   │   └── textarea.tsx
+│   │   ├── ErrorBoundary.tsx
 │   │   ├── Layout.tsx
 │   │   └── PixelBlast.tsx
 │   ├── hooks/
+│   │   └── useFontLoader.ts
 │   ├── lib/
 │   │   └── utils.ts
 │   ├── pages/
 │   │   ├── tools/
 │   │   │   ├── PlaceholderTool.tsx
 │   │   │   └── QRCodeGenerator.tsx
-│   │   └── HomePage.tsx
+│   │   ├── HomePage.tsx
+│   │   └── NotFoundPage.tsx
 │   ├── index.css
 │   ├── main.tsx
 │   └── tools.ts
@@ -223,10 +230,10 @@ export default defineConfig([
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Toolbox</title>
 
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   </head>
   <body>
@@ -540,10 +547,10 @@ export default defineConfig({
     @apply bg-background text-foreground font-sans;
   }
 }
-
 --- END OF FILE src/index.css ---
 
 --- START OF FILE src/main.tsx ---
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
@@ -552,6 +559,7 @@ import './index.css';
 import { Layout } from '@/components/Layout';
 import { HomePage } from '@/pages/HomePage';
 import { tools } from '@/tools';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 const router = createBrowserRouter([
   {
@@ -566,6 +574,10 @@ const router = createBrowserRouter([
         path: tool.path,
         element: <tool.component />,
       })),
+      {
+        path: '*',
+        element: <NotFoundPage />,
+      }
     ],
   },
 ]);
@@ -629,9 +641,50 @@ export const tools: Tool[] = [
 ];
 --- END OF FILE src/tools.ts ---
 
+--- START OF FILE src/components/ErrorBoundary.tsx ---
+import { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props {
+    children: ReactNode;
+    fallback: ReactNode;
+}
+
+interface State {
+    hasError: boolean;
+}
+
+class ErrorBoundary extends Component<Props, State> {
+    public state: State = {
+        hasError: false,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public static getDerivedStateFromError(_: Error): State {
+        // Update state so the next render will show the fallback UI.
+        return { hasError: true };
+    }
+
+    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        // You can also log the error to an error reporting service
+        console.error("Uncaught error:", error, errorInfo);
+    }
+
+    public render() {
+        if (this.state.hasError) {
+            return this.props.fallback;
+        }
+
+        return this.props.children;
+    }
+}
+
+export default ErrorBoundary;
+--- END OF FILE src/components/ErrorBoundary.tsx ---
+
 --- START OF FILE src/components/Layout.tsx ---
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { tools } from '@/tools';
 import Beams from './bits/Beams';
 import { StaggeredMenu, StaggeredMenuItem, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
@@ -647,6 +700,28 @@ export const Layout = () => {
     const isHomePage = location.pathname === '/';
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const mousePosition = useRef({ x: 0, y: 0 });
+    const [showBeams, setShowBeams] = useState(isHomePage);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (isHomePage) {
+            // On initial mount or navigation to homepage, reset and delay
+            if (isInitialMount.current) {
+                setShowBeams(false);
+                isInitialMount.current = false;
+            } else {
+                setShowBeams(false);
+            }
+
+            const timer = setTimeout(() => {
+                setShowBeams(true);
+            }, 100);
+            return () => clearTimeout(timer);
+        } else {
+            // Immediately hide beams when leaving homepage
+            setShowBeams(false);
+        }
+    }, [isHomePage]);
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
@@ -676,12 +751,12 @@ export const Layout = () => {
     ];
 
     const socialItems: StaggeredMenuSocialItem[] = [
-        { label: 'GitHub', link: 'https://github.com' },
-        { label: 'Twitter', link: 'https://twitter.com' },
+        { label: 'GitHub', link: 'https://github.com/SoldatenEnte' },
+        { label: 'Instagram', link: 'https://www.instagram.com/apos.tels/' },
     ];
 
     const logo = !isHomePage ? (
-        <NavLink to="/" aria-label="Go to homepage" className="text-zinc-50 hover:text-white transition-colors">
+        <NavLink to="/" aria-label="Go to homepage" className="text-zinc-50 hover:text-white transition-all duration-200 ease-in-out hover:scale-110">
             <Home className="h-7 w-7" />
         </NavLink>
     ) : null;
@@ -689,8 +764,11 @@ export const Layout = () => {
     return (
         <div className="h-screen font-sans antialiased relative">
             <ClickSpark>
-                {isHomePage && (
-                    <div className="absolute inset-0 -z-10">
+                {isHomePage && showBeams && (
+                    <div
+                        className="absolute inset-0 -z-10 transition-opacity duration-[2000ms] ease-in-out"
+                        style={{ opacity: 1 }}
+                    >
                         <Beams
                             beamWidth={3}
                             beamHeight={30}
@@ -707,6 +785,9 @@ export const Layout = () => {
                 )}
 
                 <div className="relative z-10 h-full flex flex-col">
+                    {/* Mobile top gradient for header contrast */}
+                    <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-background/80 via-background/50 to-transparent pointer-events-none z-30 lg:hidden" />
+
                     <StaggeredMenu
                         items={menuItems}
                         socialItems={socialItems}
@@ -722,8 +803,19 @@ export const Layout = () => {
                         logo={logo}
                     />
 
-                    <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 overflow-y-auto">
-                        <Outlet context={{ openMenu }} />
+                    <main className="flex-1 flex flex-col overflow-y-auto">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={location.pathname}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:pt-20 pt-20"
+                            >
+                                <Outlet context={{ openMenu }} />
+                            </motion.div>
+                        </AnimatePresence>
                     </main>
                 </div>
             </ClickSpark>
@@ -1608,6 +1700,200 @@ const DirLight: FC<{ position: [number, number, number]; color: string; intensit
 export default Beams;
 --- END OF FILE src/components/bits/Beams.tsx ---
 
+--- START OF FILE src/components/bits/CircularText.tsx ---
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, useAnimation, useMotionValue, MotionValue, Transition, useSpring } from 'motion/react';
+import { ArrowUpRight } from 'lucide-react';
+
+interface CircularTextProps {
+    text: string;
+    href: string;
+    spinDuration?: number;
+    onHover?: 'slowDown' | 'speedUp' | 'pause' | 'goBonkers';
+    className?: string;
+}
+
+const getRotationTransition = (duration: number, from: number, loop: boolean = true) => ({
+    from,
+    to: from + 360,
+    ease: 'linear' as const,
+    duration,
+    type: 'tween' as const,
+    repeat: loop ? Infinity : 0
+});
+
+const getTransition = (duration: number, from: number) => ({
+    rotate: getRotationTransition(duration, from),
+    scale: {
+        type: 'spring' as const,
+        damping: 20,
+        stiffness: 300
+    }
+});
+
+const CircularText: React.FC<CircularTextProps> = ({
+    text,
+    href,
+    spinDuration = 20,
+    onHover = 'speedUp',
+    className = ''
+}) => {
+    const letters = Array.from(text);
+    const controls = useAnimation();
+    const rotation: MotionValue<number> = useMotionValue(0);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const ref = useRef<HTMLAnchorElement>(null);
+    const magneticX = useMotionValue(0);
+    const magneticY = useMotionValue(0);
+
+    const springConfig = { damping: 40, stiffness: 300, mass: 1 };
+    const springX = useSpring(magneticX, springConfig);
+    const springY = useSpring(magneticY, springConfig);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const { clientX, clientY } = e;
+            const { left, top, width, height } = el.getBoundingClientRect();
+
+            const centerX = left + width / 2;
+            const centerY = top + height / 2;
+
+            const deltaX = clientX - centerX;
+            const deltaY = clientY - centerY;
+
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const magneticRadius = 250;
+            const maxPullStrength = 0.4;
+
+            if (distance < magneticRadius) {
+                const pullFactor = 1 - distance / magneticRadius;
+                magneticX.set(deltaX * maxPullStrength * pullFactor);
+                magneticY.set(deltaY * maxPullStrength * pullFactor);
+            } else {
+                magneticX.set(0);
+                magneticY.set(0);
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, [magneticX, magneticY]);
+
+    useEffect(() => {
+        const start = rotation.get();
+        controls.start({
+            rotate: start + 360,
+            scale: 1,
+            transition: getTransition(spinDuration, start)
+        });
+    }, [spinDuration, text, onHover, controls, rotation]);
+
+    const handleHoverStart = () => {
+        setIsHovered(true);
+        const start = rotation.get();
+
+        if (!onHover) return;
+
+        let transitionConfig: ReturnType<typeof getTransition> | Transition;
+        let scaleVal = 1;
+
+        switch (onHover) {
+            case 'slowDown':
+                transitionConfig = getTransition(spinDuration * 2, start);
+                break;
+            case 'speedUp':
+                transitionConfig = getTransition(spinDuration / 4, start);
+                break;
+            case 'pause':
+                controls.stop();
+                return;
+            case 'goBonkers':
+                transitionConfig = getTransition(spinDuration / 20, start);
+                scaleVal = 0.8;
+                break;
+            default:
+                transitionConfig = getTransition(spinDuration, start);
+        }
+
+        controls.start({
+            rotate: start + 360,
+            scale: scaleVal,
+            transition: transitionConfig
+        });
+    };
+
+    const handleHoverEnd = () => {
+        setIsHovered(false);
+        const start = rotation.get();
+        controls.start({
+            rotate: start + 360,
+            scale: 1,
+            transition: getTransition(spinDuration, start)
+        });
+    };
+
+    const innerCircleVariants = {
+        hidden: { opacity: 0, scale: 0 },
+        visible: { opacity: 1, scale: 1 }
+    };
+
+    return (
+        <motion.a
+            ref={ref}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+            style={{ x: springX, y: springY }}
+        >
+            <motion.div
+                className={`m-0 mx-auto rounded-full w-[120px] h-[120px] relative font-black text-white text-center cursor-pointer origin-center flex items-center justify-center ${className}`}
+                onHoverStart={handleHoverStart}
+                onHoverEnd={handleHoverEnd}
+            >
+                <motion.div
+                    className="absolute w-[60%] h-[60%] bg-white rounded-full flex items-center justify-center"
+                    variants={innerCircleVariants}
+                    initial="hidden"
+                    animate={isHovered ? "visible" : "hidden"}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                >
+                    <ArrowUpRight className="text-black h-8 w-8" />
+                </motion.div>
+
+                <motion.div
+                    className="absolute w-full h-full"
+                    style={{ rotate: rotation }}
+                    animate={controls}
+                >
+                    {letters.map((letter, i) => {
+                        const angle = (i / letters.length) * 360;
+                        return (
+                            <span
+                                key={i}
+                                className="absolute top-0 left-1/2 -translate-x-1/2 h-1/2 origin-bottom text-sm"
+                                style={{ transform: `rotate(${angle}deg)` }}
+                            >
+                                {letter}
+                            </span>
+                        );
+                    })}
+                </motion.div>
+            </motion.div>
+        </motion.a>
+    );
+};
+
+export default CircularText;
+--- END OF FILE src/components/bits/CircularText.tsx ---
+
 --- START OF FILE src/components/bits/ClickSpark.tsx ---
 import React, { useRef, useEffect, useCallback } from 'react';
 
@@ -1776,6 +2062,189 @@ export default function Dock({ items, className = '' }: DockProps) {
     );
 }
 --- END OF FILE src/components/bits/Dock.tsx ---
+
+--- START OF FILE src/components/bits/FuzzyText.tsx ---
+// src/components/bits/FuzzyText.tsx
+import React, { useEffect, useRef } from 'react';
+
+interface FuzzyTextProps {
+    children: React.ReactNode;
+    fontSize?: number | string;
+    fontWeight?: string | number;
+    fontFamily?: string;
+    color?: string;
+    enableHover?: boolean;
+    baseIntensity?: number;
+    hoverIntensity?: number;
+}
+
+const FuzzyText: React.FC<FuzzyTextProps> = ({
+    children,
+    fontSize = 'clamp(2rem, 8vw, 8rem)',
+    fontWeight = 900,
+    fontFamily = 'inherit',
+    color = '#fff',
+    enableHover = true,
+    baseIntensity = 0.18,
+    hoverIntensity = 0.5
+}) => {
+    const canvasRef = useRef<HTMLCanvasElement & { cleanupFuzzyText?: () => void }>(null);
+
+    useEffect(() => {
+        let animationFrameId: number;
+        let isCancelled = false;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const init = async () => {
+            if (document.fonts?.ready) {
+                await document.fonts.ready;
+            }
+            if (isCancelled) return;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const computedFontFamily =
+                fontFamily === 'inherit' ? window.getComputedStyle(canvas).fontFamily || 'sans-serif' : fontFamily;
+
+            const fontSizeStr = typeof fontSize === 'number' ? `${fontSize}px` : fontSize;
+            let numericFontSize: number;
+            if (typeof fontSize === 'number') {
+                numericFontSize = fontSize;
+            } else {
+                const temp = document.createElement('span');
+                temp.style.fontSize = fontSize;
+                document.body.appendChild(temp);
+                const computedSize = window.getComputedStyle(temp).fontSize;
+                numericFontSize = parseFloat(computedSize);
+                document.body.removeChild(temp);
+            }
+
+            const text = React.Children.toArray(children).join('');
+
+            const offscreen = document.createElement('canvas');
+            const offCtx = offscreen.getContext('2d');
+            if (!offCtx) return;
+
+            offCtx.font = `${fontWeight} ${fontSizeStr} ${computedFontFamily}`;
+            offCtx.textBaseline = 'alphabetic';
+            const metrics = offCtx.measureText(text);
+
+            const actualLeft = metrics.actualBoundingBoxLeft ?? 0;
+            const actualRight = metrics.actualBoundingBoxRight ?? metrics.width;
+            const actualAscent = metrics.actualBoundingBoxAscent ?? numericFontSize;
+            const actualDescent = metrics.actualBoundingBoxDescent ?? numericFontSize * 0.2;
+
+            const textBoundingWidth = Math.ceil(actualLeft + actualRight);
+            const tightHeight = Math.ceil(actualAscent + actualDescent);
+
+            const extraWidthBuffer = 10;
+            const offscreenWidth = textBoundingWidth + extraWidthBuffer;
+
+            offscreen.width = offscreenWidth;
+            offscreen.height = tightHeight;
+
+            const xOffset = extraWidthBuffer / 2;
+            offCtx.font = `${fontWeight} ${fontSizeStr} ${computedFontFamily}`;
+            offCtx.textBaseline = 'alphabetic';
+            offCtx.fillStyle = color;
+            offCtx.fillText(text, xOffset - actualLeft, actualAscent);
+
+            const horizontalMargin = 50;
+            const verticalMargin = 0;
+            canvas.width = offscreenWidth + horizontalMargin * 2;
+            canvas.height = tightHeight + verticalMargin * 2;
+            ctx.translate(horizontalMargin, verticalMargin);
+
+            const interactiveLeft = horizontalMargin + xOffset;
+            const interactiveTop = verticalMargin;
+            const interactiveRight = interactiveLeft + textBoundingWidth;
+            const interactiveBottom = interactiveTop + tightHeight;
+
+            let isHovering = false;
+            const fuzzRange = 30;
+
+            const run = () => {
+                if (isCancelled) return;
+                ctx.clearRect(-fuzzRange, -fuzzRange, offscreenWidth + 2 * fuzzRange, tightHeight + 2 * fuzzRange);
+                const intensity = isHovering ? hoverIntensity : baseIntensity;
+                for (let j = 0; j < tightHeight; j++) {
+                    const dx = Math.floor(intensity * (Math.random() - 0.5) * fuzzRange);
+                    ctx.drawImage(offscreen, 0, j, offscreenWidth, 1, dx, j, offscreenWidth, 1);
+                }
+                animationFrameId = window.requestAnimationFrame(run);
+            };
+
+            run();
+
+            const isInsideTextArea = (x: number, y: number) =>
+                x >= interactiveLeft && x <= interactiveRight && y >= interactiveTop && y <= interactiveBottom;
+
+            const handleMouseMove = (e: MouseEvent) => {
+                if (!enableHover) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                isHovering = isInsideTextArea(x, y);
+            };
+
+            const handleMouseLeave = () => {
+                isHovering = false;
+            };
+
+            const handleTouchMove = (e: TouchEvent) => {
+                if (!enableHover) return;
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                isHovering = isInsideTextArea(x, y);
+            };
+
+            const handleTouchEnd = () => {
+                isHovering = false;
+            };
+
+            if (enableHover) {
+                canvas.addEventListener('mousemove', handleMouseMove);
+                canvas.addEventListener('mouseleave', handleMouseLeave);
+                canvas.addEventListener('touchmove', handleTouchMove, {
+                    passive: false
+                });
+                canvas.addEventListener('touchend', handleTouchEnd);
+            }
+
+            const cleanup = () => {
+                window.cancelAnimationFrame(animationFrameId);
+                if (enableHover) {
+                    canvas.removeEventListener('mousemove', handleMouseMove);
+                    canvas.removeEventListener('mouseleave', handleMouseLeave);
+                    canvas.removeEventListener('touchmove', handleTouchMove);
+                    canvas.removeEventListener('touchend', handleTouchEnd);
+                }
+            };
+
+            canvas.cleanupFuzzyText = cleanup;
+        };
+
+        init();
+
+        return () => {
+            isCancelled = true;
+            window.cancelAnimationFrame(animationFrameId);
+            if (canvas && canvas.cleanupFuzzyText) {
+                canvas.cleanupFuzzyText();
+            }
+        };
+    }, [children, fontSize, fontWeight, fontFamily, color, enableHover, baseIntensity, hoverIntensity]);
+
+    return <canvas ref={canvasRef} />;
+};
+
+export default FuzzyText;
+--- END OF FILE src/components/bits/FuzzyText.tsx ---
 
 --- START OF FILE src/components/bits/PixelBlast.tsx ---
 import React, { useEffect, useRef } from 'react';
@@ -2493,6 +2962,159 @@ const ShinyText: React.FC<ShinyTextProps> = ({ text, disabled = false, speed = 5
 export default ShinyText;
 --- END OF FILE src/components/bits/ShinyText.tsx ---
 
+--- START OF FILE src/components/bits/Silk.tsx ---
+import React, { forwardRef, useMemo, useRef, useLayoutEffect } from 'react';
+import { Canvas, useFrame, useThree, RootState } from '@react-three/fiber';
+import { Color, Mesh, ShaderMaterial } from 'three';
+import { IUniform } from 'three';
+
+type NormalizedRGB = [number, number, number];
+
+const hexToNormalizedRGB = (hex: string): NormalizedRGB => {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  return [r, g, b];
+};
+
+interface UniformValue<T = number | Color> {
+  value: T;
+}
+
+interface SilkUniforms {
+  uSpeed: UniformValue<number>;
+  uScale: UniformValue<number>;
+  uNoiseIntensity: UniformValue<number>;
+  uColor: UniformValue<Color>;
+  uRotation: UniformValue<number>;
+  uTime: UniformValue<number>;
+  [uniform: string]: IUniform;
+}
+
+const vertexShader = `
+varying vec2 vUv;
+varying vec3 vPosition;
+
+void main() {
+  vPosition = position;
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const fragmentShader = `
+varying vec2 vUv;
+varying vec3 vPosition;
+
+uniform float uTime;
+uniform vec3  uColor;
+uniform float uSpeed;
+uniform float uScale;
+uniform float uRotation;
+uniform float uNoiseIntensity;
+
+const float e = 2.71828182845904523536;
+
+float noise(vec2 texCoord) {
+  float G = e;
+  vec2  r = (G * sin(G * texCoord));
+  return fract(r.x * r.y * (1.0 + texCoord.x));
+}
+
+vec2 rotateUvs(vec2 uv, float angle) {
+  float c = cos(angle);
+  float s = sin(angle);
+  mat2  rot = mat2(c, -s, s, c);
+  return rot * uv;
+}
+
+void main() {
+  float rnd        = noise(gl_FragCoord.xy);
+  vec2  uv         = rotateUvs(vUv * uScale, uRotation);
+  vec2  tex        = uv * uScale;
+  float tOffset    = uSpeed * uTime;
+
+  tex.y += 0.03 * sin(8.0 * tex.x - tOffset);
+
+  float pattern = 0.6 +
+                  0.4 * sin(5.0 * (tex.x + tex.y +
+                                   cos(3.0 * tex.x + 5.0 * tex.y) +
+                                   0.02 * tOffset) +
+                           sin(20.0 * (tex.x + tex.y - 0.1 * tOffset)));
+
+  vec4 col = vec4(uColor, 1.0) * vec4(pattern) - rnd / 15.0 * uNoiseIntensity;
+  col.a = 1.0;
+  gl_FragColor = col;
+}
+`;
+
+interface SilkPlaneProps {
+  uniforms: SilkUniforms;
+}
+
+const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane({ uniforms }, ref) {
+  const { viewport } = useThree();
+
+  useLayoutEffect(() => {
+    const mesh = ref as React.MutableRefObject<Mesh | null>;
+    if (mesh.current) {
+      mesh.current.scale.set(viewport.width, viewport.height, 1);
+    }
+  }, [ref, viewport]);
+
+  useFrame((_state: RootState, delta: number) => {
+    const mesh = ref as React.MutableRefObject<Mesh | null>;
+    if (mesh.current) {
+      const material = mesh.current.material as ShaderMaterial & {
+        uniforms: SilkUniforms;
+      };
+      material.uniforms.uTime.value += 0.1 * delta;
+    }
+  });
+
+  return (
+    <mesh ref={ref}>
+      <planeGeometry args={[1, 1, 1, 1]} />
+      <shaderMaterial uniforms={uniforms} vertexShader={vertexShader} fragmentShader={fragmentShader} />
+    </mesh>
+  );
+});
+SilkPlane.displayName = 'SilkPlane';
+
+export interface SilkProps {
+  speed?: number;
+  scale?: number;
+  color?: string;
+  noiseIntensity?: number;
+  rotation?: number;
+}
+
+const Silk: React.FC<SilkProps> = ({ speed = 5, scale = 1, color = '#7B7481', noiseIntensity = 1.5, rotation = 0 }) => {
+  const meshRef = useRef<Mesh>(null);
+
+  const uniforms = useMemo<SilkUniforms>(
+    () => ({
+      uSpeed: { value: speed },
+      uScale: { value: scale },
+      uNoiseIntensity: { value: noiseIntensity },
+      uColor: { value: new Color(...hexToNormalizedRGB(color)) },
+      uRotation: { value: rotation },
+      uTime: { value: 0 }
+    }),
+    [speed, scale, noiseIntensity, color, rotation]
+  );
+
+  return (
+    <Canvas dpr={[1, 2]} frameloop="always">
+      <SilkPlane ref={meshRef} uniforms={uniforms} />
+    </Canvas>
+  );
+};
+
+export default Silk;
+--- END OF FILE src/components/bits/Silk.tsx ---
+
 --- START OF FILE src/components/bits/StaggeredMenu.tsx ---
 import React, { useCallback, useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
@@ -2552,6 +3174,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     initialCursorPos
 }: StaggeredMenuProps) => {
     const panelRef = useRef<HTMLDivElement | null>(null);
+    const headerRef = useRef<HTMLElement | null>(null);
     const preLayersRef = useRef<HTMLDivElement | null>(null);
     const preLayerElsRef = useRef<HTMLElement[]>([]);
     const plusHRef = useRef<HTMLSpanElement | null>(null);
@@ -2599,6 +3222,12 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isOpen, onClose]);
+
+    useEffect(() => {
+        if (headerRef.current) {
+            gsap.fromTo(headerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, delay: 0.2 });
+        }
+    }, []);
 
 
     useLayoutEffect(() => {
@@ -2760,17 +3389,17 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                         return allColors.map((c, i) => (<div key={i} className="sm-prelayer absolute top-0 right-0 h-full w-full translate-x-0" style={{ background: c }} />));
                     })()}
                 </div>
-                <header className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
+                <header ref={headerRef} className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
                         {logo}
                     </div>
-                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
-                        <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em]" aria-hidden="true">
+                    <button ref={toggleBtnRef} className="sm-toggle group relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
+                        <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true">
                             <span ref={textInnerRef} className="sm-toggle-textInner flex flex-col leading-none">
                                 {textLines.map((l, i) => (<span className="sm-toggle-line block h-[1em] leading-none" key={i}>{l}</span>))}
                             </span>
                         </span>
-                        <span ref={iconRef} className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform]" aria-hidden="true">
+                        <span ref={iconRef} className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform] transition-transform duration-200 group-hover:scale-125" aria-hidden="true">
                             <span ref={plusHRef} className="sm-icon-line absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]" />
                             <span ref={plusVRef} className="sm-icon-line sm-icon-line-v absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]" />
                         </span>
@@ -3871,6 +4500,61 @@ export {
 }
 --- END OF FILE src/components/ui/dialog.tsx ---
 
+--- START OF FILE src/components/ui/download-button.tsx ---
+import { FC } from 'react';
+import { Download, FileDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+type DownloadFormat = 'png' | 'jpeg' | 'svg';
+
+interface DownloadButtonProps {
+    onDownload: (format: DownloadFormat) => void;
+    disabled?: boolean;
+}
+
+export const DownloadButton: FC<DownloadButtonProps> = ({ onDownload, disabled = false }) => {
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button disabled={disabled}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2">
+                <div className="grid gap-1">
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => onDownload('png')}
+                    >
+                        <FileDown className="mr-2 h-4 w-4" />
+                        PNG
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => onDownload('jpeg')}
+                    >
+                        <FileDown className="mr-2 h-4 w-4" />
+                        JPG
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => onDownload('svg')}
+                    >
+                        <FileDown className="mr-2 h-4 w-4" />
+                        SVG
+                    </Button>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
+--- END OF FILE src/components/ui/download-button.tsx ---
+
 --- START OF FILE src/components/ui/input.tsx ---
 import * as React from "react"
 
@@ -4403,6 +5087,39 @@ export { Textarea }
 
 --- END OF FILE src/components/ui/textarea.tsx ---
 
+--- START OF FILE src/hooks/useFontLoader.ts ---
+import { useState, useEffect } from 'react';
+
+export const useFontLoader = (fontFamily: string) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        if (document.fonts.check(`1em ${fontFamily}`)) {
+            setIsLoaded(true);
+            return;
+        }
+
+        document.fonts.load(`1em ${fontFamily}`)
+            .then(() => {
+                if (!isCancelled) {
+                    setIsLoaded(true);
+                }
+            })
+            .catch((err) => {
+                console.error(`Failed to load font: ${fontFamily}`, err);
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [fontFamily]);
+
+    return isLoaded;
+};
+--- END OF FILE src/hooks/useFontLoader.ts ---
+
 --- START OF FILE src/lib/utils.ts ---
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -4414,34 +5131,166 @@ export function cn(...inputs: ClassValue[]) {
 --- END OF FILE src/lib/utils.ts ---
 
 --- START OF FILE src/pages/HomePage.tsx ---
+import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { LayoutContext } from '@/components/Layout';
 import ShinyText from '@/components/bits/ShinyText';
 import { BlurryButton } from '@/components/ui/blurry-button';
+import CircularText from '@/components/bits/CircularText';
+import { motion } from 'motion/react';
+
+const containerVariants = {
+    hidden: {},
+    visible: {
+        transition: {
+            staggerChildren: 0.2,
+            delayChildren: 0.8,
+        },
+    },
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 1,
+            ease: [0.3, 1, 0.5, 1] as [number, number, number, number]
+        }
+    },
+};
 
 export const HomePage = () => {
     const { openMenu } = useOutletContext<LayoutContext>();
+    const [pageLoaded, setPageLoaded] = useState(false);
+
+    useEffect(() => {
+        // Wait half a second before triggering any animations
+        const timer = setTimeout(() => {
+            setPageLoaded(true);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     return (
-        <div className="container mx-auto h-full flex flex-col items-center justify-center text-center min-h-[calc(100vh-10rem)]">
-            <ShinyText
-                text="Essential Online Tools"
-                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight"
+        <>
+            {/* Black overlay that fades out after 500ms */}
+            <div
+                className="fixed inset-0 bg-black pointer-events-none transition-opacity duration-1000 ease-out z-40"
+                style={{ opacity: pageLoaded ? 0 : 1 }}
             />
-            <p className="max-w-lg mx-auto mt-4 text-lg sm:text-xl text-muted-foreground">
-                A collection of free and simple web utilities for everyday tasks, right in your browser.
-            </p>
-            <BlurryButton className="mt-8" onClick={openMenu}>
-                Discover Tools
-            </BlurryButton>
-        </div>
+
+            <motion.div
+                className="container mx-auto h-full flex flex-col items-center justify-center text-center flex-1"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                <motion.div variants={itemVariants}>
+                    <ShinyText
+                        text="Essential Online Tools"
+                        className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight"
+                    />
+                </motion.div>
+                <motion.p variants={itemVariants} className="max-w-lg mx-auto mt-4 text-lg sm:text-xl text-muted-foreground">
+                    A collection of free and simple web utilities for everyday tasks, right in your browser.
+                </motion.p>
+                <motion.div variants={itemVariants} className="mt-7">
+                    <BlurryButton onClick={openMenu}>
+                        Discover Tools
+                    </BlurryButton>
+                </motion.div>
+            </motion.div>
+
+            <motion.div
+                className="fixed bottom-8 right-8 hidden lg:block z-30"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 2.0 }}
+            >
+                <CircularText
+                    text="VISIT GITHUB * VISIT GITHUB * "
+                    href="https://github.com/SoldatenEnte"
+                    spinDuration={25}
+                    onHover="speedUp"
+                />
+            </motion.div>
+        </>
     );
 };
 --- END OF FILE src/pages/HomePage.tsx ---
 
+--- START OF FILE src/pages/NotFoundPage.tsx ---
+import { useEffect } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import FuzzyText from '@/components/bits/FuzzyText';
+import Silk from '@/components/bits/Silk';
+import { useFontLoader } from '@/hooks/useFontLoader';
+
+export const NotFoundPage = () => {
+    const isChewyLoaded = useFontLoader('Chewy');
+    const chewyControls = useAnimation();
+
+    useEffect(() => {
+        if (isChewyLoaded) {
+            chewyControls.start({ opacity: 1, y: 0 });
+        }
+    }, [isChewyLoaded, chewyControls]);
+
+    return (
+        <div className="relative w-full h-full flex flex-col items-center justify-center text-center">
+            <div className="fixed inset-0 -z-10">
+                <Silk
+                    speed={5}
+                    scale={1}
+                    color="#1b1b1bff"
+                    noiseIntensity={1.2}
+                    rotation={0.1}
+                />
+            </div>
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+            >
+                <FuzzyText
+                    baseIntensity={0.2}
+                    hoverIntensity={0.5}
+                    enableHover={true}
+                    fontSize="clamp(4rem, 12vw, 12rem)"
+                    fontWeight="900"
+                >
+                    404
+                </FuzzyText>
+            </motion.div>
+            <motion.div
+                className="mt-3 ml-25 -rotate-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={chewyControls}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+            >
+                <FuzzyText
+                    baseIntensity={0.15}
+                    hoverIntensity={0.4}
+                    enableHover={true}
+                    fontSize="clamp(1rem, 3vw, 3rem)"
+                    fontWeight="400"
+                    fontFamily='"Chewy", cursive'
+                >
+                    not found
+                </FuzzyText>
+            </motion.div>
+        </div>
+    );
+};
+--- END OF FILE src/pages/NotFoundPage.tsx ---
+
 --- START OF FILE src/pages/tools/PlaceholderTool.tsx ---
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Wrench } from "lucide-react";
+import { motion } from "motion/react";
 
 interface PlaceholderToolProps {
     toolName: string;
@@ -4449,7 +5298,12 @@ interface PlaceholderToolProps {
 
 export const PlaceholderTool = ({ toolName }: PlaceholderToolProps) => {
     return (
-        <div className="flex items-center justify-center h-full">
+        <motion.div
+            className="flex items-center justify-center h-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const }}
+        >
             <Card className="bg-card/60 border-white/10 backdrop-blur-xl text-center p-8 w-full max-w-lg">
                 <CardHeader>
                     <div className="flex justify-center mb-4">
@@ -4461,7 +5315,7 @@ export const PlaceholderTool = ({ toolName }: PlaceholderToolProps) => {
                     </CardDescription>
                 </CardHeader>
             </Card>
-        </div>
+        </motion.div>
     );
 };
 --- END OF FILE src/pages/tools/PlaceholderTool.tsx ---
@@ -4469,7 +5323,7 @@ export const PlaceholderTool = ({ toolName }: PlaceholderToolProps) => {
 --- START OF FILE src/pages/tools/QRCodeGenerator.tsx ---
 import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Palette, Download, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud, Code } from 'lucide-react';
+import { Palette, Image as ImageIcon, Trash2, Type, Link, UploadCloud, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -4490,6 +5344,8 @@ import {
 } from '@/components/ui/color-picker';
 import { cn } from '@/lib/utils';
 import PixelBlast from '@/components/bits/PixelBlast';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { DownloadButton } from '@/components/ui/download-button';
 
 type Level = 'L' | 'M' | 'Q' | 'H';
 
@@ -4512,9 +5368,10 @@ interface QrCodePreviewProps {
     options: QrCodeOptions;
     size: number;
     onSizeChange: (size: number) => void;
-    onDownload: (format: 'png' | 'jpeg') => void;
-    onDownloadSVG: () => void;
+    onFormatSelect: (format: 'png' | 'jpeg' | 'svg') => void;
+    isTooLong: boolean;
     className?: string;
+    delay?: number;
 }
 interface QrCodeControlsProps {
     text: string;
@@ -4531,6 +5388,7 @@ interface QrCodeControlsProps {
     onRemoveLogo: () => void;
     finalLogoSrc: string;
     className?: string;
+    delay?: number;
 }
 
 // --- Custom Hook ---
@@ -4543,31 +5401,67 @@ const useDebounce = <T,>(value: T, delay: number): T => {
     return debouncedValue;
 };
 
+// --- Fade-in Animation Hook ---
+const useFadeIn = (delay: number = 0) => {
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsVisible(true);
+        }, delay);
+
+        return () => clearTimeout(timer);
+    }, [delay]);
+
+    return isVisible;
+};
+
 // --- Sub-Components with Typed Props ---
-const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onDownload, onDownloadSVG, className }) => (
-    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8 h-full", className)}>
-        <div className="flex-grow w-full flex items-center justify-center min-h-0">
-            <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
-                <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
-            </div>
-        </div>
-        <div className="w-full max-w-xs mt-8 flex-shrink-0">
-            <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
-            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
-        </div>
-        <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
-            <Button onClick={() => onDownload('png')} disabled={!options.value}>
-                <Download className="mr-2 h-4 w-4" /> PNG
-            </Button>
-            <Button variant="secondary" onClick={() => onDownload('jpeg')} disabled={!options.value}>
-                JPG
-            </Button>
-            <Button variant="outline" onClick={onDownloadSVG} disabled={!options.value}>
-                <Code className="mr-2 h-4 w-4" /> SVG
-            </Button>
-        </div>
-    </Card>
+const QrErrorFallback = () => (
+    <div className="flex flex-col items-center justify-center h-full text-center text-destructive p-4 bg-destructive/10 rounded-lg">
+        <AlertTriangle className="w-10 h-10 mb-3" />
+        <p className="font-semibold">Data Too Long</p>
+        <p className="text-sm text-destructive/80">
+            The input data is too long to be encoded in a QR code with the current settings. Try shortening the text or lowering the error correction level.
+        </p>
+    </div>
 );
+
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onFormatSelect, isTooLong, className, delay = 0 }) => {
+    const isVisible = useFadeIn(delay);
+
+    return (
+        <Card
+            style={{ opacity: 0, backgroundColor: 'transparent' }}
+            className={cn(
+                "lg:col-span-2 flex flex-col items-center justify-start border-white/10 p-6 sm:p-8 h-full transition-all duration-1000 ease-out",
+                isVisible
+                    ? "!opacity-100 bg-black/20 backdrop-blur-lg translate-y-0"
+                    : "!opacity-0 bg-transparent backdrop-blur-none translate-y-8",
+                className
+            )}
+        >
+            <div className="flex-grow w-full flex items-center justify-center min-h-0">
+                <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
+                    {isTooLong ? (
+                        <QrErrorFallback />
+                    ) : (
+                        <ErrorBoundary fallback={<QrErrorFallback />}>
+                            <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
+                        </ErrorBoundary>
+                    )}
+                </div>
+            </div>
+            <div className="w-full max-w-xs mt-8 flex-shrink-0">
+                <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
+                <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
+            </div>
+            <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
+                <DownloadButton onDownload={onFormatSelect} disabled={!options.value || isTooLong} />
+            </div>
+        </Card>
+    );
+};
 
 const ColorPickerInput: FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
     <div>
@@ -4595,9 +5489,44 @@ const ColorPickerInput: FC<{ label: string; value: string; onChange: (value: str
     </div>
 );
 
-const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
+const AnimatedCard: FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({ children, delay = 0, className }) => {
+    const isVisible = useFadeIn(delay);
+
+    return (
+        <Card
+            style={{ opacity: 0, backgroundColor: 'transparent' }}
+            className={cn(
+                "border-white/10 transition-all duration-1000 ease-out",
+                isVisible
+                    ? "!opacity-100 bg-card/60 backdrop-blur-xl translate-y-0"
+                    : "!opacity-0 bg-transparent backdrop-blur-none translate-y-8",
+                className
+            )}
+        >
+            {children}
+        </Card>
+    );
+};
+
+const QrCodeControls: FC<QrCodeControlsProps> = ({
+    text,
+    onTextChange,
+    level,
+    onLevelChange,
+    fgColor,
+    onFgColorChange,
+    bgColor,
+    onBgColorChange,
+    onImageUpload,
+    logoUrl,
+    onLogoUrlChange,
+    onRemoveLogo,
+    finalLogoSrc,
+    className,
+    delay = 0
+}) => (
     <div className={cn("lg:col-span-1 space-y-6 flex flex-col h-full", className)}>
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl flex flex-col flex-grow">
+        <AnimatedCard delay={delay} className="flex flex-col flex-grow">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
             </CardHeader>
@@ -4615,9 +5544,9 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                     </SelectContent>
                 </Select>
             </CardContent>
-        </Card>
+        </AnimatedCard>
 
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+        <AnimatedCard delay={delay + 100}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Palette size={18} /> Style</CardTitle>
             </CardHeader>
@@ -4625,9 +5554,9 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                 <ColorPickerInput label="Foreground" value={fgColor} onChange={onFgColorChange} />
                 <ColorPickerInput label="Background" value={bgColor} onChange={onBgColorChange} />
             </CardContent>
-        </Card>
+        </AnimatedCard>
 
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+        <AnimatedCard delay={delay + 200}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><ImageIcon size={18} /> Logo</CardTitle>
             </CardHeader>
@@ -4647,7 +5576,7 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                 <div>
                     <Label htmlFor="logoUrl" className="mb-2 block text-sm">Paste Image URL</Label>
                     <div className="relative">
-                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input id="logoUrl" type="url" placeholder="https://example.com/logo.png" value={logoUrl} onChange={e => onLogoUrlChange(e.target.value)} className="pl-9" />
                     </div>
                 </div>
@@ -4667,11 +5596,19 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                     </div>
                 )}
             </CardContent>
-        </Card>
+        </AnimatedCard>
     </div>
 );
 
 // --- Main Component ---
+// Approximate character limits for alphanumeric data per error correction level.
+const QR_CAPACITY_MAP: Record<Level, number> = {
+    L: 2953, // Low
+    M: 2331, // Medium
+    Q: 1663, // Quartile
+    H: 1273, // High
+};
+
 export const QRCodeGenerator = () => {
     const [text, setText] = useState('http://ave.dee.isep.ipp.pt/~1250182');
     const [size, setSize] = useState(512);
@@ -4683,6 +5620,35 @@ export const QRCodeGenerator = () => {
     const debouncedText = useDebounce(text, 500);
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
+    const [isDesktop, setIsDesktop] = useState(false);
+    const [pageLoaded, setPageLoaded] = useState(false);
+    const [showBackground, setShowBackground] = useState(false);
+
+    useEffect(() => {
+        // Trigger page load animation immediately
+        setPageLoaded(true);
+
+        // Delay background appearance by 300ms, then fade in slowly
+        const bgTimer = setTimeout(() => {
+            setShowBackground(true);
+        }, 300);
+
+        return () => clearTimeout(bgTimer);
+    }, []);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
+        const handleMediaQueryChange = (e: MediaQueryListEvent) => {
+            setIsDesktop(e.matches);
+        };
+        setIsDesktop(mediaQuery.matches);
+        mediaQuery.addEventListener('change', handleMediaQueryChange);
+        return () => {
+            mediaQuery.removeEventListener('change', handleMediaQueryChange);
+        };
+    }, []);
+
+    const isTooLong = debouncedText.length > QR_CAPACITY_MAP[level];
 
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -4712,7 +5678,7 @@ export const QRCodeGenerator = () => {
         }
     };
 
-    const handleDownload = (format: 'png' | 'jpeg') => {
+    const handleDownloadRaster = (format: 'png' | 'jpeg') => {
         const svgElement = qrRef.current?.querySelector('svg');
         if (svgElement) {
             const svgString = new XMLSerializer().serializeToString(svgElement);
@@ -4723,7 +5689,7 @@ export const QRCodeGenerator = () => {
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
-            const img = new Image();
+            const img = new window.Image();
             const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
             const url = URL.createObjectURL(svgBlob);
 
@@ -4765,6 +5731,14 @@ export const QRCodeGenerator = () => {
         }
     };
 
+    const handleFormatSelect = (format: 'png' | 'jpeg' | 'svg') => {
+        if (format === 'svg') {
+            handleDownloadSVG();
+        } else {
+            handleDownloadRaster(format);
+        }
+    };
+
     const finalLogoSrc = logoImage || debouncedLogoUrl;
 
     const options: QrCodeOptions = {
@@ -4782,52 +5756,63 @@ export const QRCodeGenerator = () => {
     };
 
     return (
-        <div className="relative h-full flex flex-col">
-            <div className="fixed inset-0 -z-10">
-                <PixelBlast
-                    variant="circle"
-                    pixelSize={6}
-                    color="#B19EEF"
-                    patternScale={3}
-                    patternDensity={1.2}
-                    pixelSizeJitter={0.5}
-                    enableRipples
-                    rippleSpeed={0.4}
-                    rippleThickness={0.12}
-                    rippleIntensityScale={1.5}
-                    liquid
-                    liquidStrength={0.12}
-                    liquidRadius={1.2}
-                    liquidWobbleSpeed={5}
-                    speed={0.6}
-                    edgeFade={0.25}
-                    transparent
-                />
-            </div>
+        <div className="relative h-full">
+            {/* Page load fade-in overlay */}
+            <div
+                className="fixed inset-0 bg-black pointer-events-none transition-opacity duration-700 ease-out z-50"
+                style={{ opacity: pageLoaded ? 0 : 1 }}
+            />
 
-            <div className="flex-grow min-h-0 relative z-10">
-                <div className="h-full flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-stretch pt-10">
-                    <QrCodeControls
-                        className="order-2 lg:order-1"
-                        text={text} onTextChange={setText}
-                        level={level} onLevelChange={(value) => setLevel(value as Level)}
-                        fgColor={fgColor} onFgColorChange={setFgColor}
-                        bgColor={bgColor} onBgColorChange={setBgColor}
-                        onImageUpload={handleImageUpload}
-                        logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
-                        onRemoveLogo={removeLogo}
-                        finalLogoSrc={finalLogoSrc}
-                    />
-                    <QrCodePreview
-                        className="order-1 lg:order-2"
-                        qrRef={qrRef}
-                        options={options}
-                        size={size}
-                        onSizeChange={setSize}
-                        onDownload={handleDownload}
-                        onDownloadSVG={handleDownloadSVG}
+            {isDesktop && (
+                <div
+                    className="fixed inset-0 -z-10 transition-opacity duration-[2000ms] ease-in-out"
+                    style={{ opacity: showBackground ? 1 : 0 }}
+                >
+                    <PixelBlast
+                        variant="circle"
+                        pixelSize={6}
+                        color="#B19EEF"
+                        patternScale={3}
+                        patternDensity={1.2}
+                        pixelSizeJitter={0.5}
+                        enableRipples
+                        rippleSpeed={0.4}
+                        rippleThickness={0.12}
+                        rippleIntensityScale={1.5}
+                        liquid
+                        liquidStrength={0.12}
+                        liquidRadius={1.2}
+                        liquidWobbleSpeed={5}
+                        speed={0.6}
+                        edgeFade={0.25}
+                        transparent
                     />
                 </div>
+            )}
+
+            <div className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-8 h-full">
+                <QrCodeControls
+                    className="order-2 lg:order-1"
+                    text={text} onTextChange={setText}
+                    level={level} onLevelChange={(value) => setLevel(value as Level)}
+                    fgColor={fgColor} onFgColorChange={setFgColor}
+                    bgColor={bgColor} onBgColorChange={setBgColor}
+                    onImageUpload={handleImageUpload}
+                    logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
+                    onRemoveLogo={removeLogo}
+                    finalLogoSrc={finalLogoSrc}
+                    delay={200}
+                />
+                <QrCodePreview
+                    className="order-1 lg:order-2"
+                    qrRef={qrRef}
+                    options={options}
+                    size={size}
+                    onSizeChange={setSize}
+                    onFormatSelect={handleFormatSelect}
+                    isTooLong={isTooLong}
+                    delay={0}
+                />
             </div>
         </div>
     );

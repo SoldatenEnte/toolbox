@@ -64,11 +64,13 @@ export const HomePage = () => {
                 <motion.p variants={itemVariants} className="max-w-lg mx-auto mt-4 text-lg sm:text-xl text-muted-foreground">
                     A collection of free and simple web utilities for everyday tasks, right in your browser.
                 </motion.p>
-                <motion.div variants={itemVariants} className="mt-7">
-                    <BlurryButton onClick={openMenu}>
-                        Discover Tools
-                    </BlurryButton>
-                </motion.div>
+                <BlurryButton
+                    variants={itemVariants}
+                    className="mt-7"
+                    onClick={openMenu}
+                >
+                    Discover Tools
+                </BlurryButton>
             </motion.div>
 
             <motion.div
