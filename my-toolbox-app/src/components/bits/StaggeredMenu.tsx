@@ -268,13 +268,13 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
                         {logo}
                     </div>
-                    <button ref={toggleBtnRef} className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
-                        <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em]" aria-hidden="true">
+                    <button ref={toggleBtnRef} className="sm-toggle group relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 font-medium leading-none overflow-visible pointer-events-auto" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen} aria-controls="staggered-menu-panel" onClick={onToggle} type="button">
+                        <span className="sm-toggle-textWrap relative inline-block h-[1em] overflow-hidden whitespace-nowrap w-[3em] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true">
                             <span ref={textInnerRef} className="sm-toggle-textInner flex flex-col leading-none">
                                 {textLines.map((l, i) => (<span className="sm-toggle-line block h-[1em] leading-none" key={i}>{l}</span>))}
                             </span>
                         </span>
-                        <span ref={iconRef} className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform]" aria-hidden="true">
+                        <span ref={iconRef} className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform] transition-transform duration-200 group-hover:scale-125" aria-hidden="true">
                             <span ref={plusHRef} className="sm-icon-line absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]" />
                             <span ref={plusVRef} className="sm-icon-line sm-icon-line-v absolute left-1/2 top-1/2 w-full h-[2px] bg-current rounded-[2px] -translate-x-1/2 -translate-y-1/2 [will-change:transform]" />
                         </span>

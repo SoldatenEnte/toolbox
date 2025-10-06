@@ -15,7 +15,7 @@ export const HomePage = () => {
             <p className="max-w-lg mx-auto mt-4 text-lg sm:text-xl text-muted-foreground">
                 A collection of free and simple web utilities for everyday tasks, right in your browser.
             </p>
-            <BlurryButton className="mt-8" onClick={openMenu}>
+            <BlurryButton className="mt-7" onClick={openMenu}>
                 Discover Tools
             </BlurryButton>
         </div>

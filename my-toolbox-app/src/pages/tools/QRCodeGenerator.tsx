@@ -341,7 +341,7 @@ export const QRCodeGenerator = () => {
     };
 
     return (
-        <div className="relative h-full flex flex-col">
+        <div className="relative h-full">
             <div className="fixed inset-0 -z-10">
                 <PixelBlast
                     variant="circle"
@@ -364,29 +364,27 @@ export const QRCodeGenerator = () => {
                 />
             </div>
 
-            <div className="flex-grow min-h-0 relative z-10">
-                <div className="h-full flex flex-col lg:grid lg:grid-cols-3 gap-8 lg:items-stretch pt-10">
-                    <QrCodeControls
-                        className="order-2 lg:order-1"
-                        text={text} onTextChange={setText}
-                        level={level} onLevelChange={(value) => setLevel(value as Level)}
-                        fgColor={fgColor} onFgColorChange={setFgColor}
-                        bgColor={bgColor} onBgColorChange={setBgColor}
-                        onImageUpload={handleImageUpload}
-                        logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
-                        onRemoveLogo={removeLogo}
-                        finalLogoSrc={finalLogoSrc}
-                    />
-                    <QrCodePreview
-                        className="order-1 lg:order-2"
-                        qrRef={qrRef}
-                        options={options}
-                        size={size}
-                        onSizeChange={setSize}
-                        onFormatSelect={handleFormatSelect}
-                        isTooLong={isTooLong}
-                    />
-                </div>
+            <div className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-8 h-full">
+                <QrCodeControls
+                    className="order-2 lg:order-1"
+                    text={text} onTextChange={setText}
+                    level={level} onLevelChange={(value) => setLevel(value as Level)}
+                    fgColor={fgColor} onFgColorChange={setFgColor}
+                    bgColor={bgColor} onBgColorChange={setBgColor}
+                    onImageUpload={handleImageUpload}
+                    logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
+                    onRemoveLogo={removeLogo}
+                    finalLogoSrc={finalLogoSrc}
+                />
+                <QrCodePreview
+                    className="order-1 lg:order-2"
+                    qrRef={qrRef}
+                    options={options}
+                    size={size}
+                    onSizeChange={setSize}
+                    onFormatSelect={handleFormatSelect}
+                    isTooLong={isTooLong}
+                />
             </div>
         </div>
     );

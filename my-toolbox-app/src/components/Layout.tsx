@@ -44,12 +44,12 @@ export const Layout = () => {
     ];
 
     const socialItems: StaggeredMenuSocialItem[] = [
-        { label: 'GitHub', link: 'https://github.com' },
-        { label: 'Twitter', link: 'https://twitter.com' },
+        { label: 'GitHub', link: 'https://github.com/SoldatenEnte' },
+        { label: 'Instagram', link: 'https://www.instagram.com/apos.tels/' },
     ];
 
     const logo = !isHomePage ? (
-        <NavLink to="/" aria-label="Go to homepage" className="text-zinc-50 hover:text-white transition-colors">
+        <NavLink to="/" aria-label="Go to homepage" className="text-zinc-50 hover:text-white transition-all duration-200 ease-in-out hover:scale-110">
             <Home className="h-7 w-7" />
         </NavLink>
     ) : null;
@@ -75,6 +75,9 @@ export const Layout = () => {
                 )}
 
                 <div className="relative z-10 h-full flex flex-col">
+                    {/* Mobile top gradient for header contrast */}
+                    <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-background/80 via-background/50 to-transparent pointer-events-none z-30 lg:hidden" />
+
                     <StaggeredMenu
                         items={menuItems}
                         socialItems={socialItems}
@@ -90,8 +93,10 @@ export const Layout = () => {
                         logo={logo}
                     />
 
-                    <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-20 overflow-y-auto">
-                        <Outlet context={{ openMenu }} />
+                    <main className="flex-1 flex flex-col overflow-y-auto">
+                        <div className="flex-1 p-4 sm:p-6 lg:p-8 lg:pt-20 pt-20">
+                            <Outlet context={{ openMenu }} />
+                        </div>
                     </main>
                 </div>
             </ClickSpark>
