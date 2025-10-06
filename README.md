@@ -4,6 +4,8 @@ A collection of free, simple, and beautifully designed web utilities for everyda
 
  <!-- **[Live Demo](https://url.com)**  Currently no demo available -->
 
+> **Note:** This project is currently a work in progress and serves as a tech demo to showcase a modern web development stack. While the existing tools are functional, expect ongoing changes and the addition of new features over time.
+
 ---
 
 ## Features
