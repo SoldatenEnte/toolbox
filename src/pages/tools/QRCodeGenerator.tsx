@@ -107,7 +107,7 @@ const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeCha
         <Card
             style={{ opacity: 0, backgroundColor: 'transparent' }}
             className={cn(
-                "lg:col-span-2 flex flex-col items-center justify-start border-white/10 p-6 sm:p-8 h-full transition-all duration-1000 ease-out",
+                "flex flex-col items-center justify-start border-white/10 p-6 sm:p-8 h-full transition-all duration-1000 ease-out",
                 isVisible
                     ? "!opacity-100 bg-black/20 backdrop-blur-lg translate-y-0"
                     : "!opacity-0 bg-transparent backdrop-blur-none translate-y-8",
@@ -198,7 +198,7 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({
     className,
     delay = 0
 }) => (
-    <div className={cn("lg:col-span-1 space-y-6 flex flex-col h-full", className)}>
+    <div className={cn("space-y-6 flex flex-col h-full", className)}>
         <AnimatedCard delay={delay} className="flex flex-col flex-grow">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
@@ -423,7 +423,7 @@ export const QRCodeGenerator = () => {
     };
 
     return (
-        <div className="relative h-full">
+        <div className="relative h-full w-full flex flex-col items-center">
             <div
                 className="fixed inset-0 bg-black pointer-events-none transition-opacity duration-700 ease-out z-50"
                 style={{ opacity: pageLoaded ? 0 : 1 }}
@@ -446,30 +446,31 @@ export const QRCodeGenerator = () => {
                     />
                 </div>
             )}
-
-            <div className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-8 h-full">
-                <QrCodeControls
-                    className="order-2 lg:order-1"
-                    text={text} onTextChange={setText}
-                    level={level} onLevelChange={(value) => setLevel(value as Level)}
-                    fgColor={fgColor} onFgColorChange={setFgColor}
-                    bgColor={bgColor} onBgColorChange={setBgColor}
-                    onImageUpload={handleImageUpload}
-                    logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
-                    onRemoveLogo={removeLogo}
-                    finalLogoSrc={finalLogoSrc}
-                    delay={200}
-                />
-                <QrCodePreview
-                    className="order-1 lg:order-2"
-                    qrRef={qrRef}
-                    options={options}
-                    size={size}
-                    onSizeChange={setSize}
-                    onFormatSelect={handleFormatSelect}
-                    isTooLong={isTooLong}
-                    delay={0}
-                />
+            <div className="w-full max-w-7xl flex-grow">
+                <div className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-8 h-full">
+                    <QrCodeControls
+                        className="order-2 lg:order-1 lg:col-span-1"
+                        text={text} onTextChange={setText}
+                        level={level} onLevelChange={(value) => setLevel(value as Level)}
+                        fgColor={fgColor} onFgColorChange={setFgColor}
+                        bgColor={bgColor} onBgColorChange={setBgColor}
+                        onImageUpload={handleImageUpload}
+                        logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
+                        onRemoveLogo={removeLogo}
+                        finalLogoSrc={finalLogoSrc}
+                        delay={200}
+                    />
+                    <QrCodePreview
+                        className="order-1 lg:order-2 lg:col-span-2"
+                        qrRef={qrRef}
+                        options={options}
+                        size={size}
+                        onSizeChange={setSize}
+                        onFormatSelect={handleFormatSelect}
+                        isTooLong={isTooLong}
+                        delay={0}
+                    />
+                </div>
             </div>
         </div>
     );
