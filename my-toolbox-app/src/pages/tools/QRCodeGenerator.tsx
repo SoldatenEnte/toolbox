@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ChangeEvent, RefObject, FC } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Palette, Image as ImageIcon, Trash2, Type, Link as LinkIcon, UploadCloud, AlertTriangle } from 'lucide-react';
+import { Palette, Image as ImageIcon, Trash2, Type, Link, UploadCloud, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,7 @@ interface QrCodePreviewProps {
     onFormatSelect: (format: 'png' | 'jpeg' | 'svg') => void;
     isTooLong: boolean;
     className?: string;
+    delay?: number;
 }
 interface QrCodeControlsProps {
     text: string;
@@ -64,6 +65,7 @@ interface QrCodeControlsProps {
     onRemoveLogo: () => void;
     finalLogoSrc: string;
     className?: string;
+    delay?: number;
 }
 
 // --- Custom Hook ---
@@ -74,6 +76,21 @@ const useDebounce = <T,>(value: T, delay: number): T => {
         return () => clearTimeout(handler);
     }, [value, delay]);
     return debouncedValue;
+};
+
+// --- Fade-in Animation Hook ---
+const useFadeIn = (delay: number = 0) => {
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsVisible(true);
+        }, delay);
+
+        return () => clearTimeout(timer);
+    }, [delay]);
+
+    return isVisible;
 };
 
 // --- Sub-Components with Typed Props ---
@@ -87,28 +104,41 @@ const QrErrorFallback = () => (
     </div>
 );
 
-const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onFormatSelect, isTooLong, className }) => (
-    <Card className={cn("lg:col-span-2 flex flex-col items-center justify-start bg-black/20 border-white/10 backdrop-blur-lg p-6 sm:p-8 h-full", className)}>
-        <div className="flex-grow w-full flex items-center justify-center min-h-0">
-            <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
-                {isTooLong ? (
-                    <QrErrorFallback />
-                ) : (
-                    <ErrorBoundary fallback={<QrErrorFallback />}>
-                        <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
-                    </ErrorBoundary>
-                )}
+const QrCodePreview: FC<QrCodePreviewProps> = ({ qrRef, options, size, onSizeChange, onFormatSelect, isTooLong, className, delay = 0 }) => {
+    const isVisible = useFadeIn(delay);
+
+    return (
+        <Card
+            style={{ opacity: 0, backgroundColor: 'transparent' }}
+            className={cn(
+                "lg:col-span-2 flex flex-col items-center justify-start border-white/10 p-6 sm:p-8 h-full transition-all duration-1000 ease-out",
+                isVisible
+                    ? "!opacity-100 bg-black/20 backdrop-blur-lg translate-y-0"
+                    : "!opacity-0 bg-transparent backdrop-blur-none translate-y-8",
+                className
+            )}
+        >
+            <div className="flex-grow w-full flex items-center justify-center min-h-0">
+                <div ref={qrRef} className="p-4 bg-white shadow-lg rounded-lg transition-all w-full max-w-[400px] aspect-square">
+                    {isTooLong ? (
+                        <QrErrorFallback />
+                    ) : (
+                        <ErrorBoundary fallback={<QrErrorFallback />}>
+                            <QRCodeSVG {...options} style={{ width: '100%', height: '100%' }} />
+                        </ErrorBoundary>
+                    )}
+                </div>
             </div>
-        </div>
-        <div className="w-full max-w-xs mt-8 flex-shrink-0">
-            <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
-            <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
-        </div>
-        <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
-            <DownloadButton onDownload={onFormatSelect} disabled={!options.value || isTooLong} />
-        </div>
-    </Card>
-);
+            <div className="w-full max-w-xs mt-8 flex-shrink-0">
+                <Label className="block text-center text-sm font-medium text-foreground mb-3">Resolution: {size}px</Label>
+                <Slider value={[size]} onValueChange={([val]) => onSizeChange(val)} min={64} max={2048} step={8} />
+            </div>
+            <div className="mt-6 flex items-center gap-2 sm:gap-4 flex-shrink-0 flex-wrap justify-center">
+                <DownloadButton onDownload={onFormatSelect} disabled={!options.value || isTooLong} />
+            </div>
+        </Card>
+    );
+};
 
 const ColorPickerInput: FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
     <div>
@@ -136,9 +166,44 @@ const ColorPickerInput: FC<{ label: string; value: string; onChange: (value: str
     </div>
 );
 
-const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, onLevelChange, fgColor, onFgColorChange, bgColor, onBgColorChange, onImageUpload, logoUrl, onLogoUrlChange, onRemoveLogo, finalLogoSrc, className }) => (
+const AnimatedCard: FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({ children, delay = 0, className }) => {
+    const isVisible = useFadeIn(delay);
+
+    return (
+        <Card
+            style={{ opacity: 0, backgroundColor: 'transparent' }}
+            className={cn(
+                "border-white/10 transition-all duration-1000 ease-out",
+                isVisible
+                    ? "!opacity-100 bg-card/60 backdrop-blur-xl translate-y-0"
+                    : "!opacity-0 bg-transparent backdrop-blur-none translate-y-8",
+                className
+            )}
+        >
+            {children}
+        </Card>
+    );
+};
+
+const QrCodeControls: FC<QrCodeControlsProps> = ({
+    text,
+    onTextChange,
+    level,
+    onLevelChange,
+    fgColor,
+    onFgColorChange,
+    bgColor,
+    onBgColorChange,
+    onImageUpload,
+    logoUrl,
+    onLogoUrlChange,
+    onRemoveLogo,
+    finalLogoSrc,
+    className,
+    delay = 0
+}) => (
     <div className={cn("lg:col-span-1 space-y-6 flex flex-col h-full", className)}>
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl flex flex-col flex-grow">
+        <AnimatedCard delay={delay} className="flex flex-col flex-grow">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Type size={18} /> Content</CardTitle>
             </CardHeader>
@@ -156,9 +221,9 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                     </SelectContent>
                 </Select>
             </CardContent>
-        </Card>
+        </AnimatedCard>
 
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+        <AnimatedCard delay={delay + 100}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Palette size={18} /> Style</CardTitle>
             </CardHeader>
@@ -166,9 +231,9 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                 <ColorPickerInput label="Foreground" value={fgColor} onChange={onFgColorChange} />
                 <ColorPickerInput label="Background" value={bgColor} onChange={onBgColorChange} />
             </CardContent>
-        </Card>
+        </AnimatedCard>
 
-        <Card className="bg-card/60 border-white/10 backdrop-blur-xl">
+        <AnimatedCard delay={delay + 200}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><ImageIcon size={18} /> Logo</CardTitle>
             </CardHeader>
@@ -188,7 +253,7 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                 <div>
                     <Label htmlFor="logoUrl" className="mb-2 block text-sm">Paste Image URL</Label>
                     <div className="relative">
-                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input id="logoUrl" type="url" placeholder="https://example.com/logo.png" value={logoUrl} onChange={e => onLogoUrlChange(e.target.value)} className="pl-9" />
                     </div>
                 </div>
@@ -208,7 +273,7 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({ text, onTextChange, level, on
                     </div>
                 )}
             </CardContent>
-        </Card>
+        </AnimatedCard>
     </div>
 );
 
@@ -233,6 +298,20 @@ export const QRCodeGenerator = () => {
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
     const [isDesktop, setIsDesktop] = useState(false);
+    const [pageLoaded, setPageLoaded] = useState(false);
+    const [showBackground, setShowBackground] = useState(false);
+
+    useEffect(() => {
+        // Trigger page load animation immediately
+        setPageLoaded(true);
+
+        // Delay background appearance by 300ms, then fade in slowly
+        const bgTimer = setTimeout(() => {
+            setShowBackground(true);
+        }, 300);
+
+        return () => clearTimeout(bgTimer);
+    }, []);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
@@ -287,7 +366,7 @@ export const QRCodeGenerator = () => {
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
-            const img = new Image();
+            const img = new window.Image();
             const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
             const url = URL.createObjectURL(svgBlob);
 
@@ -355,8 +434,17 @@ export const QRCodeGenerator = () => {
 
     return (
         <div className="relative h-full">
+            {/* Page load fade-in overlay */}
+            <div
+                className="fixed inset-0 bg-black pointer-events-none transition-opacity duration-700 ease-out z-50"
+                style={{ opacity: pageLoaded ? 0 : 1 }}
+            />
+
             {isDesktop && (
-                <div className="fixed inset-0 -z-10">
+                <div
+                    className="fixed inset-0 -z-10 transition-opacity duration-[2000ms] ease-in-out"
+                    style={{ opacity: showBackground ? 1 : 0 }}
+                >
                     <PixelBlast
                         variant="circle"
                         pixelSize={6}
@@ -390,6 +478,7 @@ export const QRCodeGenerator = () => {
                     logoUrl={logoUrl} onLogoUrlChange={handleLogoUrlChange}
                     onRemoveLogo={removeLogo}
                     finalLogoSrc={finalLogoSrc}
+                    delay={200}
                 />
                 <QrCodePreview
                     className="order-1 lg:order-2"
@@ -399,6 +488,7 @@ export const QRCodeGenerator = () => {
                     onSizeChange={setSize}
                     onFormatSelect={handleFormatSelect}
                     isTooLong={isTooLong}
+                    delay={0}
                 />
             </div>
         </div>

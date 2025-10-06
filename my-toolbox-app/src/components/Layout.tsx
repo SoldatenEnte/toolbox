@@ -16,6 +16,28 @@ export const Layout = () => {
     const isHomePage = location.pathname === '/';
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const mousePosition = useRef({ x: 0, y: 0 });
+    const [showBeams, setShowBeams] = useState(isHomePage);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (isHomePage) {
+            // On initial mount or navigation to homepage, reset and delay
+            if (isInitialMount.current) {
+                setShowBeams(false);
+                isInitialMount.current = false;
+            } else {
+                setShowBeams(false);
+            }
+
+            const timer = setTimeout(() => {
+                setShowBeams(true);
+            }, 100);
+            return () => clearTimeout(timer);
+        } else {
+            // Immediately hide beams when leaving homepage
+            setShowBeams(false);
+        }
+    }, [isHomePage]);
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
@@ -58,12 +80,10 @@ export const Layout = () => {
     return (
         <div className="h-screen font-sans antialiased relative">
             <ClickSpark>
-                {isHomePage && (
-                    <motion.div
-                        className="absolute inset-0 -z-10"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 1.5, ease: 'linear' }}
+                {isHomePage && showBeams && (
+                    <div
+                        className="absolute inset-0 -z-10 transition-opacity duration-[2000ms] ease-in-out"
+                        style={{ opacity: 1 }}
                     >
                         <Beams
                             beamWidth={3}
@@ -77,7 +97,7 @@ export const Layout = () => {
                             envMapIntensity={3}
                         />
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,black)] pointer-events-none" />
-                    </motion.div>
+                    </div>
                 )}
 
                 <div className="relative z-10 h-full flex flex-col">
@@ -106,7 +126,7 @@ export const Layout = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
                                 className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:pt-20 pt-20"
                             >
                                 <Outlet context={{ openMenu }} />
