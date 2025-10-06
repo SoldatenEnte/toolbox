@@ -281,7 +281,7 @@ const QR_CAPACITY_MAP: Record<Level, number> = {
 };
 
 export const QRCodeGenerator = () => {
-    const [text, setText] = useState('https://ducklin.de/toolbox/');
+    const [text, setText] = useState('https://ducklin.de/projects/toolbox/');
     const [size, setSize] = useState(512);
     const [fgColor, setFgColor] = useState('#000000');
     const [bgColor, setBgColor] = useState('#ffffff');
