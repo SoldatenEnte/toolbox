@@ -232,6 +232,19 @@ export const QRCodeGenerator = () => {
     const debouncedText = useDebounce(text, 500);
     const debouncedLogoUrl = useDebounce(logoUrl, 500);
     const qrRef = useRef<HTMLDivElement>(null);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
+        const handleMediaQueryChange = (e: MediaQueryListEvent) => {
+            setIsDesktop(e.matches);
+        };
+        setIsDesktop(mediaQuery.matches);
+        mediaQuery.addEventListener('change', handleMediaQueryChange);
+        return () => {
+            mediaQuery.removeEventListener('change', handleMediaQueryChange);
+        };
+    }, []);
 
     const isTooLong = debouncedText.length > QR_CAPACITY_MAP[level];
 
@@ -342,27 +355,29 @@ export const QRCodeGenerator = () => {
 
     return (
         <div className="relative h-full">
-            <div className="fixed inset-0 -z-10">
-                <PixelBlast
-                    variant="circle"
-                    pixelSize={6}
-                    color="#B19EEF"
-                    patternScale={3}
-                    patternDensity={1.2}
-                    pixelSizeJitter={0.5}
-                    enableRipples
-                    rippleSpeed={0.4}
-                    rippleThickness={0.12}
-                    rippleIntensityScale={1.5}
-                    liquid
-                    liquidStrength={0.12}
-                    liquidRadius={1.2}
-                    liquidWobbleSpeed={5}
-                    speed={0.6}
-                    edgeFade={0.25}
-                    transparent
-                />
-            </div>
+            {isDesktop && (
+                <div className="fixed inset-0 -z-10">
+                    <PixelBlast
+                        variant="circle"
+                        pixelSize={6}
+                        color="#B19EEF"
+                        patternScale={3}
+                        patternDensity={1.2}
+                        pixelSizeJitter={0.5}
+                        enableRipples
+                        rippleSpeed={0.4}
+                        rippleThickness={0.12}
+                        rippleIntensityScale={1.5}
+                        liquid
+                        liquidStrength={0.12}
+                        liquidRadius={1.2}
+                        liquidWobbleSpeed={5}
+                        speed={0.6}
+                        edgeFade={0.25}
+                        transparent
+                    />
+                </div>
+            )}
 
             <div className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-8 h-full">
                 <QrCodeControls
