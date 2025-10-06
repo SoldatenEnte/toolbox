@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { tools } from '@/tools';
 import Beams from './bits/Beams';
 import { StaggeredMenu, StaggeredMenuItem, StaggeredMenuSocialItem } from './bits/StaggeredMenu';
@@ -58,7 +59,12 @@ export const Layout = () => {
         <div className="h-screen font-sans antialiased relative">
             <ClickSpark>
                 {isHomePage && (
-                    <div className="absolute inset-0 -z-10">
+                    <motion.div
+                        className="absolute inset-0 -z-10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1.5, ease: 'linear' }}
+                    >
                         <Beams
                             beamWidth={3}
                             beamHeight={30}
@@ -71,7 +77,7 @@ export const Layout = () => {
                             envMapIntensity={3}
                         />
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,black)] pointer-events-none" />
-                    </div>
+                    </motion.div>
                 )}
 
                 <div className="relative z-10 h-full flex flex-col">
@@ -94,9 +100,18 @@ export const Layout = () => {
                     />
 
                     <main className="flex-1 flex flex-col overflow-y-auto">
-                        <div className="flex-1 p-4 sm:p-6 lg:p-8 lg:pt-20 pt-20">
-                            <Outlet context={{ openMenu }} />
-                        </div>
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={location.pathname}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:pt-20 pt-20"
+                            >
+                                <Outlet context={{ openMenu }} />
+                            </motion.div>
+                        </AnimatePresence>
                     </main>
                 </div>
             </ClickSpark>

@@ -56,6 +56,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     initialCursorPos
 }: StaggeredMenuProps) => {
     const panelRef = useRef<HTMLDivElement | null>(null);
+    const headerRef = useRef<HTMLElement | null>(null);
     const preLayersRef = useRef<HTMLDivElement | null>(null);
     const preLayerElsRef = useRef<HTMLElement[]>([]);
     const plusHRef = useRef<HTMLSpanElement | null>(null);
@@ -103,6 +104,12 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isOpen, onClose]);
+
+    useEffect(() => {
+        if (headerRef.current) {
+            gsap.fromTo(headerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, delay: 0.2 });
+        }
+    }, []);
 
 
     useLayoutEffect(() => {
@@ -264,7 +271,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                         return allColors.map((c, i) => (<div key={i} className="sm-prelayer absolute top-0 right-0 h-full w-full translate-x-0" style={{ background: c }} />));
                     })()}
                 </div>
-                <header className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
+                <header ref={headerRef} className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
                         {logo}
                     </div>
