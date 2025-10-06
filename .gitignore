@@ -27,3 +27,4 @@ dist-ssr
 
 # Generated bundle file for analysis/context
 project_bundle.txt
+create_bundle.py
