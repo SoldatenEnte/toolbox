@@ -271,7 +271,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                         return allColors.map((c, i) => (<div key={i} className="sm-prelayer absolute top-0 right-0 h-full w-full translate-x-0" style={{ background: c }} />));
                     })()}
                 </div>
-                <header ref={headerRef} className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-4 lg:p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
+                <header ref={headerRef} className="staggered-menu-header absolute top-0 left-0 w-full flex items-center justify-between p-6 lg:p-[2em] bg-transparent pointer-events-none z-20" aria-label="Main navigation header">
                     <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
                         {logo}
                     </div>

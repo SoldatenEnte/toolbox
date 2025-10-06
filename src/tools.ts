@@ -1,6 +1,7 @@
 import React from 'react';
 import { QRCodeGenerator } from '@/pages/tools/QRCodeGenerator';
 import { PlaceholderTool } from '@/pages/tools/PlaceholderTool';
+import { Base64Tool } from '@/pages/tools/Base64Tool';
 
 export interface Tool {
     name: string;
@@ -23,6 +24,12 @@ export const tools: Tool[] = [
         component: QRCodeGenerator,
     },
     {
+        name: 'Base64 Encoder / Decoder',
+        description: 'Encode and decode text to Base64.',
+        path: '/tools/base64-encoder',
+        component: Base64Tool,
+    },
+    {
         name: 'JSON Formatter',
         description: 'Beautify and validate your JSON data.',
         path: '/tools/json-formatter',
@@ -39,11 +46,5 @@ export const tools: Tool[] = [
         description: 'Generate placeholder text for your designs.',
         path: '/tools/lorem-ipsum-generator',
         component: createPlaceholder('Lorem Ipsum Generator'),
-    },
-    {
-        name: 'Base64 Encoder',
-        description: 'Encode and decode text to Base64.',
-        path: '/tools/base64-encoder',
-        component: createPlaceholder('Base64 Encoder'),
     },
 ];
