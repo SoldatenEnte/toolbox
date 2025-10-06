@@ -21,7 +21,6 @@ export const Layout = () => {
 
     useEffect(() => {
         if (isHomePage) {
-            // On initial mount or navigation to homepage, reset and delay
             if (isInitialMount.current) {
                 setShowBeams(false);
                 isInitialMount.current = false;
@@ -34,7 +33,6 @@ export const Layout = () => {
             }, 100);
             return () => clearTimeout(timer);
         } else {
-            // Immediately hide beams when leaving homepage
             setShowBeams(false);
         }
     }, [isHomePage]);
@@ -101,7 +99,6 @@ export const Layout = () => {
                 )}
 
                 <div className="relative z-10 h-full flex flex-col">
-                    {/* Mobile top gradient for header contrast */}
                     <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-background/80 via-background/50 to-transparent pointer-events-none z-30 lg:hidden" />
 
                     <StaggeredMenu
@@ -109,8 +106,8 @@ export const Layout = () => {
                         socialItems={socialItems}
                         displaySocials={true}
                         isFixed={true}
-                        colors={['#18181b', '#27272a']} // zinc-900, zinc-800
-                        accentColor="#FAFAFA" // zinc-50
+                        colors={['#18181b', '#27272a']}
+                        accentColor="#FAFAFA"
                         openMenuButtonColor="#FAFAFA"
                         isOpen={isMenuOpen}
                         onToggle={toggleMenu}

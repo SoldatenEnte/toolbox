@@ -26,7 +26,6 @@ import { DownloadButton } from '@/components/ui/download-button';
 
 type Level = 'L' | 'M' | 'Q' | 'H';
 
-// --- Type Definitions for Component Props ---
 interface QrCodeOptions {
     value: string;
     size: number;
@@ -68,7 +67,6 @@ interface QrCodeControlsProps {
     delay?: number;
 }
 
-// --- Custom Hook ---
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
@@ -78,7 +76,6 @@ const useDebounce = <T,>(value: T, delay: number): T => {
     return debouncedValue;
 };
 
-// --- Fade-in Animation Hook ---
 const useFadeIn = (delay: number = 0) => {
     const [isVisible, setIsVisible] = useState(false);
 
@@ -93,7 +90,6 @@ const useFadeIn = (delay: number = 0) => {
     return isVisible;
 };
 
-// --- Sub-Components with Typed Props ---
 const QrErrorFallback = () => (
     <div className="flex flex-col items-center justify-center h-full text-center text-destructive p-4 bg-destructive/10 rounded-lg">
         <AlertTriangle className="w-10 h-10 mb-3" />
@@ -277,13 +273,11 @@ const QrCodeControls: FC<QrCodeControlsProps> = ({
     </div>
 );
 
-// --- Main Component ---
-// Approximate character limits for alphanumeric data per error correction level.
 const QR_CAPACITY_MAP: Record<Level, number> = {
-    L: 2953, // Low
-    M: 2331, // Medium
-    Q: 1663, // Quartile
-    H: 1273, // High
+    L: 2953,
+    M: 2331,
+    Q: 1663,
+    H: 1273,
 };
 
 export const QRCodeGenerator = () => {
@@ -302,19 +296,15 @@ export const QRCodeGenerator = () => {
     const [showBackground, setShowBackground] = useState(false);
 
     useEffect(() => {
-        // Trigger page load animation immediately
         setPageLoaded(true);
-
-        // Delay background appearance by 300ms, then fade in slowly
         const bgTimer = setTimeout(() => {
             setShowBackground(true);
         }, 300);
-
         return () => clearTimeout(bgTimer);
     }, []);
 
     useEffect(() => {
-        const mediaQuery = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
+        const mediaQuery = window.matchMedia('(min-width: 1024px)');
         const handleMediaQueryChange = (e: MediaQueryListEvent) => {
             setIsDesktop(e.matches);
         };
@@ -434,7 +424,6 @@ export const QRCodeGenerator = () => {
 
     return (
         <div className="relative h-full">
-            {/* Page load fade-in overlay */}
             <div
                 className="fixed inset-0 bg-black pointer-events-none transition-opacity duration-700 ease-out z-50"
                 style={{ opacity: pageLoaded ? 0 : 1 }}

@@ -1,5 +1,3 @@
-'use client';
-
 import Color from 'color';
 import { PipetteIcon } from 'lucide-react';
 import * as Slider from '@radix-ui/react-slider';
@@ -25,7 +23,6 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-// Use InstanceType to get the type of a Color instance
 type ColorInstance = InstanceType<typeof Color>;
 
 interface ColorPickerContextValue {
@@ -39,7 +36,6 @@ const ColorPickerContext = createContext<ColorPickerContextValue | undefined>(
     undefined
 );
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useColorPicker = () => {
     const context = useContext(ColorPickerContext);
     if (!context) {
@@ -48,7 +44,6 @@ export const useColorPicker = () => {
     return context;
 };
 
-// Omit conflicting `onChange` from HTMLAttributes and define our own
 export type ColorPickerProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> & {
     value?: string;
     defaultValue?: string;
@@ -70,7 +65,6 @@ export const ColorPicker = ({
             try {
                 setColorState(Color(value));
             } catch {
-                // ignore invalid color
             }
         }
     }, [value]);
@@ -239,8 +233,7 @@ export const ColorPickerEyeDropper = ({
 
     const handleEyeDropper = async () => {
         try {
-            // @ts-expect-error - EyeDropper API is experimental
-            const eyeDropper = new EyeDropper();
+            const eyeDropper = new (window as any).EyeDropper();
             const result = await eyeDropper.open();
             setColor(Color(result.sRGBHex));
         } catch (error) {
@@ -320,7 +313,7 @@ export const ColorPickerFormat = ({
         try {
             setColor(Color(text));
         } catch {
-            // Ignore invalid color strings
+            //
         }
     }
 

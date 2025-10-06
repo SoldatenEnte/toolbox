@@ -33,7 +33,6 @@ export const HomePage = () => {
     const [pageLoaded, setPageLoaded] = useState(false);
 
     useEffect(() => {
-        // Wait half a second before triggering any animations
         const timer = setTimeout(() => {
             setPageLoaded(true);
         }, 500);
@@ -43,7 +42,6 @@ export const HomePage = () => {
 
     return (
         <>
-            {/* Black overlay that fades out after 500ms */}
             <div
                 className="fixed inset-0 bg-black pointer-events-none transition-opacity duration-1000 ease-out z-40"
                 style={{ opacity: pageLoaded ? 0 : 1 }}

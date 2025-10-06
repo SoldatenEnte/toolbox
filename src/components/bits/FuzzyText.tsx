@@ -1,4 +1,3 @@
-// src/components/bits/FuzzyText.tsx
 import React, { useEffect, useRef } from 'react';
 
 interface FuzzyTextProps {

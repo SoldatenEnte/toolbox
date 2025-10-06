@@ -7,8 +7,6 @@ export const ClickSpark: React.FC<{ children?: React.ReactNode }> = ({ children 
     const sparksRef = useRef<Spark[]>([]);
     const sparkColor = '#fff'; const sparkSize = 2; const sparkRadius = 25;
     const sparkCount = 12; const duration = 500;
-
-    // FIX: Explicitly define the type for `easing` to allow for all possible string values.
     const easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out' = 'ease-out';
 
     useEffect(() => {
